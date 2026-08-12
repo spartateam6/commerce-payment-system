@@ -1,7 +1,7 @@
 ---
 name: 기능 구현
 about: PRD 기반 기능 구현 Issue
-title: "[Chapter N] 기능 설명"
+title: "기능 설명"
 labels: ''
 assignees: ''
 ---
