@@ -1,5 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.member.controller;
 
+import io.github.spartateam6.commercepaymentsystem.domain.member.dto.LoginRequest;
+import io.github.spartateam6.commercepaymentsystem.domain.member.dto.LoginResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.member.dto.SignUpRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
@@ -22,5 +24,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignUpRequest request) {
         memberService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok());
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(memberService.login(request)));
     }
 }
