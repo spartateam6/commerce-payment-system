@@ -22,7 +22,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     @Transactional
-    public Long signUp(SignUpRequest request) {
+    public void signUp(SignUpRequest request) {
         if (memberRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -32,7 +32,7 @@ public class AuthService {
                 .name(request.getName())
                 .phoneNumber(request.getPhoneNumber())
                 .build();
-        return memberRepository.save(member).getId();
+        memberRepository.save(member);
     }
 
     public LoginResponse login(LoginRequest request) {
