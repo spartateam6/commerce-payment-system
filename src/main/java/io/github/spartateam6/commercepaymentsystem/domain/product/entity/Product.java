@@ -53,6 +53,4 @@ public class Product extends AuditingEntity {
     @NotNull
     @Column(name = "category", nullable = false, length = 30)
     private String category;
-
-
 }
