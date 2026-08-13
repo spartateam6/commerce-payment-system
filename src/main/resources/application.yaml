@@ -22,3 +22,7 @@ spring:
   sql:
     init:
       mode: always
+
+jwt:
+  secret: asjiofjasoijfu89uf98uwq89789187389723189478912734932i1hiu4h23i1h4iu23h1i4hiu231hiu4h
+  expiration: 3600000
