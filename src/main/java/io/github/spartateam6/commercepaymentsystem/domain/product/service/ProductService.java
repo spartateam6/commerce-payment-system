@@ -50,12 +50,6 @@ public class ProductService {
         return PageResponse.of(content, productPage);
     }
 
-    public ProductResponse getProduct(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-        return ProductResponse.from(product);
-    }
-
     private void validatePaging(int page, int size) {
         if (page < 1) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "page는 1 이상이어야 합니다.");
