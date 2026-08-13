@@ -1,5 +1,17 @@
-# 커머스 결제 시스템 프로젝트
+# 🛒 커머스 결제 시스템 프로젝트
 
+> Spring Boot와 JPA를 활용한 커머스 주문·결제 시스템
+
+회원이 상품을 조회하고 장바구니에 담아 주문·결제·취소까지 진행할 수 있으며,
+재고 차감과 복구, 결제 상태 관리를 통해 **데이터 정합성을 보장하는 커머스 백엔드 시스템**입니다.
+
+![Static Badge](https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![Static Badge](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
+![Static Badge](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white)
+
+![Static Badge](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+
+![Static Badge](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ## Team Convention
 
@@ -53,19 +65,31 @@ feature -> pr -> develop -> main
 
 ### 코드
 
-#### 결제
+#### Enum
 
-- 대기 : `PENDING`
-- 완료 : `PAID`
-- 실패 : `FAILED`
-- 부분환불 : ``
-- 취소 : `REFUND`
+- 결제
 
-#### 주문
+  - 대기 : `PENDING`
+  - 완료 : `PAID`
+  - 실패 : `FAILED`
+  - 부분환불 : ``
+  - 취소 : `REFUND`
 
-- 결제대기 : `PENDING`
-- 주문완료 : `ORDERED`
-- 주문취소 : `CANCELED`
+- 주문
+
+  - 결제대기 : `PENDING`
+  - 주문완료 : `ORDERED`
+  - 주문취소 : `CANCELED`
+
+#### 공통 응답 구조
+
+```json
+{
+  "code": "<오류 코드>",
+  "message": "<오류 메시지>",
+  "data": "<데이터> (존재하지 않을 수도 있음)"
+}
+```
 
 ## 📌 ERD
 
@@ -98,3 +122,11 @@ feature -> pr -> develop -> main
 <img width="688" height="666" alt="주문 생성 요청" src="https://github.com/user-attachments/assets/976574f9-e5f5-46ed-a508-3e5ac75bccfc" />
 <img width="669" height="684" alt="모의 결제 요청" src="https://github.com/user-attachments/assets/f202893d-f353-4bb3-9113-9bd0f2659b3a" />
 <img width="687" height="639" alt="주문 취소 요청" src="https://github.com/user-attachments/assets/10eccad2-3430-4ef7-8ad4-dd1a298c6a3d" />
+
+# 🧑‍💻 Contributors
+
+<a href="https://github.com/prjkmo112"><img src="https://github.com/prjkmo112.png?s=50" width="50px" alt="prjkmo112"/></a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/bomin03"><img src="https://github.com/bomin03.png?s=50" width="50px" alt="bomin03"/></a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/trex1004"><img src="https://github.com/trex1004.png?s=50" width="50px" alt="trex1004"/></a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/yulimlvphs"><img src="https://github.com/yulimlvphs.png?s=50" width="50px" alt="yulimlvphs"/></a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/chaeb0414-collab"><img src="https://github.com/chaeb0414-collab.png?s=50" width="50px" alt="chaeb0414-collab"/></a>&nbsp;&nbsp;&nbsp;&nbsp;
