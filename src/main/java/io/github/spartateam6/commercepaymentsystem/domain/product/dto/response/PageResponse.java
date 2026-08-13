@@ -11,7 +11,7 @@ public record PageResponse<T> (
         long totalElements,
         int totalPages
 ){
-    public static <T> PageResponse<T> od(List<T> content, Page<?> page){
+    public static <T> PageResponse<T> of(List<T> content, Page<?> page){
         return new PageResponse<>(
                 content,
                 page.getNumber() + 1,
