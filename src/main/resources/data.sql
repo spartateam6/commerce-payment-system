@@ -3,13 +3,13 @@
 -- FK 때문에 자식 테이블부터 삭제
 -- ---------------------------------------------------------
 
-DELETE FROM order_item;
-DELETE FROM payment;
-DELETE FROM `order`;
-DELETE FROM cart_items;
-DELETE FROM cart;
-DELETE FROM product;
-DELETE FROM member;
+-- DELETE FROM order_items;
+-- DELETE FROM payment;
+-- DELETE FROM orders;
+-- DELETE FROM cart_items;
+-- DELETE FROM cart;
+-- DELETE FROM product;
+-- DELETE FROM member;
 
 
 -- ---------------------------------------------------------
@@ -136,101 +136,99 @@ VALUES
     (2, NOW(6), NOW(6), 1, 1, 3),
     (3, NOW(6), NOW(6), 1, 2, 3);
 
-
 -- ---------------------------------------------------------
--- 5. ORDER
+-- 5. ORDERS
 -- ---------------------------------------------------------
 
-INSERT INTO `order` (
+INSERT INTO orders (
     order_id,
     created_at,
     updated_at,
+    member_id,
     order_number,
-    price_total,
-    status,
-    member_id
+    total_amount,
+    status
 )
 VALUES
     (
         1,
         NOW(6),
         NOW(6),
-        'ORDER-20260814-0001',
-        30000,
-        'PENDING',
-        1
+        1,
+        'ORD-20260814-0001',
+        30000.00,
+        'PAYMENT_PENDING'
     ),
     (
         2,
         NOW(6),
         NOW(6),
-        'ORDER-20260814-0002',
-        30000,
-        'COMPLETED',
-        1
+        1,
+        'ORD-20260814-0002',
+        30000.00,
+        'CONFIRMED'
     ),
     (
         3,
         NOW(6),
         NOW(6),
-        'ORDER-20260814-0003',
-        12000,
-        'PENDING',
-        2
+        2,
+        'ORD-20260814-0003',
+        12000.00,
+        'PAYMENT_PENDING'
     );
 
 
 -- ---------------------------------------------------------
--- 6. ORDER_ITEM
+-- 6. ORDER_ITEMS
 -- ---------------------------------------------------------
 
-INSERT INTO order_item (
+INSERT INTO order_items (
     order_item_id,
     created_at,
     updated_at,
-    price,
-    product_name,
-    quantity,
     order_id,
-    product_id
+    product_id,
+    product_name_snapshot,
+    unit_price_snapshot,
+    quantity
 )
 VALUES
-    -- ORDER 1
+    -- 주문 1: 반팔 티셔츠 15,000원 × 2개 = 30,000원
     (
         1,
         NOW(6),
         NOW(6),
-        15000,
+        1,
+        1,
         '반팔 티셔츠',
-        2,
-        1,
-        1
-    ),
-
-    -- ORDER 2
-    (
-        2,
-        NOW(6),
-        NOW(6),
-        30000,
-        '청바지',
-        1,
-        2,
+        15000.00,
         2
     ),
 
-    -- ORDER 3
+    -- 주문 2: 청바지 30,000원 × 1개 = 30,000원
+    (
+        2,
+        NOW(6),
+        NOW(6),
+        2,
+        2,
+        '청바지',
+        30000.00,
+        1
+    ),
+
+    -- 주문 3: 사과 12,000원 × 1개 = 12,000원
     (
         3,
         NOW(6),
         NOW(6),
-        12000,
-        '사과',
-        1,
         3,
-        3
+        3,
+        '사과',
+        12000.00,
+        1
     );
-
 
 -- ---------------------------------------------------------
 -- 7. PAYMENT

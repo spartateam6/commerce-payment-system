@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderCreateR
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class OrderController {
 
     @PostMapping("/preview")
     public ResponseEntity<ApiResponse<OrderPreviewResponse>> preview(
-            @AuthenticationPrincipal Long memberId,
+            @MemberId Long memberId,
             @Valid @RequestBody OrderPreviewRequest request
     ) {
         OrderPreviewResponse response = orderService.preview(memberId, request);
@@ -34,7 +35,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<ApiResponse<OrderCreateResponse>>
     createOrder(
-            @AuthenticationPrincipal Long memberId,
+            @MemberId Long memberId,
             @Valid @RequestBody OrderCreateRequest request
     ) {
         OrderCreateResponse response = orderService.createOrder(memberId, request);

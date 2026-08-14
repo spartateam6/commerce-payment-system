@@ -1,5 +1,6 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.entity;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,12 +11,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_MEMBER_ID_REQUIRED;
+import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_NUMBER_REQUIRED;
+
 @Getter
+@Setter
 @Entity
 @Table(
         name = "orders",
@@ -32,7 +39,9 @@ import java.util.List;
                 )
         }
 )
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+// TODO : 추후에 PROTECTED로 바꾸기
+// TODO : setter 추후에 제거하겠습니다.
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class Order extends AuditingEntity {
 
         @Id
@@ -62,18 +71,15 @@ public class Order extends AuditingEntity {
                 String orderNumber
         ) {
             if (memberId == null) {
-                throw new IllegalArgumentException(
-                        "회원 ID는 필수입니다."
-                );
+                throw new BusinessException(ORDER_MEMBER_ID_REQUIRED);
             }
 
             if (orderNumber == null || orderNumber.isBlank()) {
-                throw new IllegalArgumentException(
-                        "주문번호는 필수입니다."
-                );
+                throw new BusinessException(ORDER_NUMBER_REQUIRED);
             }
 
             Order order = new Order();
+
             order.memberId = memberId;
             order.orderNumber = orderNumber;
             order.totalAmount = BigDecimal.ZERO;
