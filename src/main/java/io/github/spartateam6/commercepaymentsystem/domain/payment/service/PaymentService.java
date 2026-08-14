@@ -2,6 +2,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.payment.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
+import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
@@ -22,14 +23,14 @@ public class PaymentService {
 
     private void validatePayment(Long memberId, Payment payment, Order order, Integer totalPrice) {
         // 주문자와 결제 정보 일치하는지?
-        if (!order.getMember().getId().equals(memberId)) {
+        if (!order.getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
         // 결제 금액 검증
         // Order DB 값 == 결제할 가격 ?
         // front 에서 넘어온 가격 == 결제할 가격 ?
-        if (!payment.getAmount().equals(order.getPriceTotal()) || !payment.getAmount().equals(totalPrice)) {
+        if (!payment.getAmount().equals(order.getTotalAmount()) || !payment.getAmount().equals(totalPrice)) {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
     }
@@ -82,7 +83,7 @@ public class PaymentService {
         Order order = MockData.getOrder(paymentCancelRequestDto.orderNumber());
 
         // 내 주문인지?
-        if (!order.getMember().getId().equals(memberId)) {
+        if (!order.getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
@@ -97,7 +98,7 @@ public class PaymentService {
             // 결제 전 취소
 
             // 주문 취소
-            order.setStatus("CANCELED"); // TODO: OrderStatus Enum 으로 변경
+            order.setStatus(OrderStatus.CANCELLED); // TODO: OrderStatus Enum 으로 변경
             // 결제 실패
             payment.setStatus(PaymentStatus.FAILED);
             // 재고 복구
@@ -110,7 +111,7 @@ public class PaymentService {
             // 결제 후 취소 (환불)
 
             // 주문 취소
-            order.setStatus("CANCELED"); // TODO: OrderStatus Enum 으로 변경
+            //order.setStatus("CANCELED"); // TODO: OrderStatus Enum 으로 변경
             // 결제 취소
             payment.setStatus(PaymentStatus.REFUND);
             // 재고 복구

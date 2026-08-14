@@ -17,6 +17,7 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 이메일입니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "MEMBER_003", "이메일 또는 비밀번호가 올바르지 않습니다."),
 
+
     // Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_001", "상품을 찾을 수 없습니다."),
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "PRODUCT_002", "재고가 부족합니다."),
@@ -35,6 +36,8 @@ public enum ErrorCode {
     DUPLICATE_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_003", "주문 대상 상품이 중복 선택되었습니다."),
     ORDER_PRODUCT_UNAVAILABLE(HttpStatus.BAD_REQUEST, "ORDER_004", "주문할 수 없는 상품이 포함되어 있습니다."),
     ORDER_STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "ORDER_005", "주문 상품의 재고가 부족합니다."),
+    ORDER_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_006", "회원 ID는 필수입니다."),
+    ORDER_NUMBER_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_007", "주문번호는 필수입니다."),
 
     // Payment
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_001", "결제 정보를 찾을 수 없습니다."),
