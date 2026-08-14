@@ -29,8 +29,12 @@ public enum ErrorCode {
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART_003", "수량은 1 이상이어야 합니다."),
 
     // Order
-    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_001", "주문을 찾을 수 없습니다."),
-    INVALID_ORDER_STATUS(HttpStatus.BAD_REQUEST, "ORDER_002", "유효하지 않은 주문 상태 변경입니다."),
+
+    ORDER_ITEMS_EMPTY(HttpStatus.BAD_REQUEST, "ORDER_001", "주문할 상품이 없습니다."),
+    INVALID_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_002", "주문할 수 없는 상품이 포함되어 있습니다."),
+    DUPLICATE_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_003", "주문 대상 상품이 중복 선택되었습니다."),
+    ORDER_PRODUCT_UNAVAILABLE(HttpStatus.BAD_REQUEST, "ORDER_004", "주문할 수 없는 상품이 포함되어 있습니다."),
+    ORDER_STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "ORDER_005", "주문 상품의 재고가 부족합니다."),
 
     // Payment
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_001", "결제 정보를 찾을 수 없습니다."),
