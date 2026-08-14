@@ -2,17 +2,22 @@ package io.github.spartateam6.commercepaymentsystem.domain.cart.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.request.CartItemAddRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.Cart;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.CartItem;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartItemRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
-import jakarta.persistence.EntityManager;
+import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductRepository;
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,38 +26,29 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-
-    // TODO: MemberRepository와 ProductRepository 병합 후 제거
-    private final EntityManager entityManager;
+    private final MemberRepository memberRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public CartItemResponse addItem(
             Long memberId,
             CartItemAddRequest request
     ) {
-        // TODO: MemberRepository.findById()로 교체
-        Member member = entityManager.find(
-                Member.class,
-                memberId
-        );
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.MEMBER_NOT_FOUND
+                        )
+                );
 
-        if (member == null) {
-            throw new IllegalArgumentException(
-                    "회원을 찾을 수 없습니다."
-            );
-        }
-
-        // TODO: ProductRepository.findById()로 교체
-        Product product = entityManager.find(
-                Product.class,
-                request.productId()
-        );
-
-        if (product == null) {
-            throw new IllegalArgumentException(
-                    "상품을 찾을 수 없습니다."
-            );
-        }
+        Product product = productRepository.findById(
+                        request.productId()
+                )
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.PRODUCT_NOT_FOUND
+                        )
+                );
 
         Cart cart = cartRepository.findByMember_Id(memberId)
                 .orElseGet(() ->
@@ -75,8 +71,8 @@ public class CartService {
                 currentQuantity + request.quantity();
 
         if (finalQuantity > product.getStock()) {
-            throw new IllegalArgumentException(
-                    "요청 수량이 상품 재고를 초과합니다."
+            throw new BusinessException(
+                    ErrorCode.INSUFFICIENT_STOCK
             );
         }
 
@@ -84,7 +80,9 @@ public class CartService {
 
         if (optionalCartItem.isPresent()) {
             cartItem = optionalCartItem.get();
-            cartItem.increaseQuantity(request.quantity());
+            cartItem.increaseQuantity(
+                    request.quantity()
+            );
         } else {
             cartItem = CartItem.create(
                     cart,
@@ -96,5 +94,30 @@ public class CartService {
         }
 
         return CartItemResponse.from(cartItem);
+    }
+    @Transactional(readOnly = true)
+    public CartResponse getCart(Long memberId) {
+
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.MEMBER_NOT_FOUND
+                ));
+
+        Optional<Cart> optionalCart =
+                cartRepository.findByMember_Id(memberId);
+
+        if (optionalCart.isEmpty()) {
+            return CartResponse.empty();
+        }
+
+        Cart cart = optionalCart.get();
+
+        List<CartItemResponse> items =
+                cartItemRepository.findAllByCart_Id(cart.getId())
+                        .stream()
+                        .map(CartItemResponse::from)
+                        .toList();
+
+        return CartResponse.of(cart.getId(), items);
     }
 }
