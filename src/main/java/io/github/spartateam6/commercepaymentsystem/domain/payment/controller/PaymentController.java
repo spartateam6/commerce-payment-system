@@ -3,7 +3,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.payment.controller;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
-import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberInfo;
+import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public class PaymentController {
     @PostMapping("/confirm")
     public ApiResponse<PaymentResponse> confirmPayment(
             @Valid @RequestBody PaymentRequestDto paymentRequestDto,
-            @MemberInfo Long memberId
+            @MemberId Long memberId
     ) {
         Long mockdataPaymentId = 1L;
 
@@ -42,7 +42,7 @@ public class PaymentController {
     @PostMapping("/cancel")
     public ApiResponse<Void> cancelPayment(
             @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto,
-            @MemberInfo Long memberId
+            @MemberId Long memberId
     ) {
         Long mockdataPaymentId = 1L;
 
