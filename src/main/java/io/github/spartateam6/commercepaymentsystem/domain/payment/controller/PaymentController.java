@@ -1,9 +1,9 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.controller;
 
-import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
+import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberInfo;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -26,12 +26,12 @@ public class PaymentController {
 
     @PostMapping("/confirm")
     public ApiResponse<PaymentResponse> confirmPayment(
-            @Valid @RequestBody PaymentRequestDto paymentRequestDto
+            @Valid @RequestBody PaymentRequestDto paymentRequestDto,
+            @MemberInfo Long memberId
     ) {
-        Member mockdataMember = new Member(); // TODO: custom annotation 으로 받아오는 것이 가장 이상적일 듯
         Long mockdataPaymentId = 1L;
 
-        boolean success = paymentService.requestPayment(mockdataMember, mockdataPaymentId, paymentRequestDto);
+        boolean success = paymentService.requestPayment(memberId, mockdataPaymentId, paymentRequestDto);
 
         if (!success)
             return ApiResponse.error(ErrorCode.PAYMENT_NOT_PAID, new PaymentResponse("fail"));
@@ -41,12 +41,12 @@ public class PaymentController {
 
     @PostMapping("/cancel")
     public ApiResponse<Void> cancelPayment(
-            @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto
+            @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto,
+            @MemberInfo Long memberId
     ) {
-        Member mockdataMember = new Member(); // TODO: custom annotation 으로 받아오는 것이 가장 이상적일 듯
         Long mockdataPaymentId = 1L;
 
-        paymentService.cancelPayment(mockdataMember, mockdataPaymentId, paymentCancelRequestDto);
+        paymentService.cancelPayment(memberId, mockdataPaymentId, paymentCancelRequestDto);
         return ApiResponse.ok();
     }
 
