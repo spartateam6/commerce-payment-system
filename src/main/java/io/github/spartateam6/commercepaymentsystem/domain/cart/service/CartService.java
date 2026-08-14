@@ -97,28 +97,27 @@ public class CartService {
     }
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
+
         memberRepository.findById(memberId)
-                .orElseThrow(()-> new BusinessException(
+                .orElseThrow(() -> new BusinessException(
                         ErrorCode.MEMBER_NOT_FOUND
                 ));
-        Cart cart = cartRepository.findByMember_Id(memberId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.CART_EMPTY
-                        ));
-        List<CartItem> cartItems=
-                cartItemRepository.findAllByCart_Id(
-                        cart.getId()
-                );
-        if (cartItems.isEmpty()) {
-            throw new BusinessException(ErrorCode.CART_EMPTY);
-        }
-        List<CartItemResponse> items = cartItems.stream()
-                .map(CartItemResponse::from)
-                .toList();
-        return CartResponse.of(
-                cart.getId(),
-                items
-        );
-    }
 
+        Optional<Cart> optionalCart =
+                cartRepository.findByMember_Id(memberId);
+
+        if (optionalCart.isEmpty()) {
+            return CartResponse.empty();
+        }
+
+        Cart cart = optionalCart.get();
+
+        List<CartItemResponse> items =
+                cartItemRepository.findAllByCart_Id(cart.getId())
+                        .stream()
+                        .map(CartItemResponse::from)
+                        .toList();
+
+        return CartResponse.of(cart.getId(), items);
+    }
 }
