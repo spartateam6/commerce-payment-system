@@ -3,13 +3,13 @@
 -- FK 때문에 자식 테이블부터 삭제
 -- ---------------------------------------------------------
 
--- DELETE FROM order_items;
--- DELETE FROM payment;
--- DELETE FROM orders;
--- DELETE FROM cart_items;
--- DELETE FROM cart;
--- DELETE FROM product;
--- DELETE FROM member;
+DELETE FROM order_items;
+DELETE FROM payment;
+DELETE FROM orders;
+DELETE FROM cart_items;
+DELETE FROM cart;
+DELETE FROM product;
+DELETE FROM member;
 
 
 -- ---------------------------------------------------------

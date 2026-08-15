@@ -2,27 +2,14 @@ spring:
   application:
     name: commerce-payment-system
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/commerce
-    username: root
-    password: root1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
-    open-in-view: true
-    hibernate:
-      ddl-auto: create
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-    defer-datasource-initialization: true
 
-  sql:
-    init:
-      mode: always
-
-jwt:
-  secret: asjiofjasoijfu89uf98uwq89789187389723189478912734932i1hiu4h23i1h4iu23h1i4hiu231hiu4h
-  expiration: 3600000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

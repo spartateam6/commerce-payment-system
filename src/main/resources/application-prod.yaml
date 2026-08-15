@@ -1,0 +1,17 @@
+spring:
+#  aws parameter 적용 이전
+#  config:
+#    import:
+#      - aws-parameterstore:/sparta-deploy-demo/prod/
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+# aws parameter store 적용 후에 수정
+#jwt:
+#  secret:
+#  expiration: 3600000
