@@ -1,0 +1,71 @@
+# 이 워크플로우가 언제 실행될지 정한다.
+# dev/main 으로 향하는 PR이 열리거나 , dev/main에 직접 push될 때 실행된다.
+# PR시점에 실행되야 머지하기 전에 막는다
+on:
+  pull_request:
+    branches: [ dev,main ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.png'
+      - '**/*.jpg'
+  push:
+    branches: [ dev,main ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.png'
+      - '**/*.jpg'
+
+jobs:
+  build:
+    # github가 제공하는 우분트 가상머신에서 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1.저장소 코드를 가상머신으로 받는 단계
+      # 없으면 코드가 없어서 암것도못함
+    - name: 소스 체크아웃
+      uses: actions/checkout@v7
+
+    # 2. 자바설치
+    # build.gradle의 Java 설정과 CI의 JDK 버전이 일치하도록 직접 맞춰놓는다
+    # GitHub Actions 환경에서도 프로젝트와 동일한 JDK 17을 사용하기 위해 Temurin JDK 17을 설치.
+    # 로컬과 CI의 JDK 버전이 다르면 로컬에서는 정상 동작하지만 CI에서 빌드가 실패할 수 있음
+    - name: JDK 17 설정
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: '17'
+
+  # 3.gradle 캐시 설정
+  # 없으면 ci 돌릴때 매번 다운로드해서 ci 실행 느려짐
+    - name: Gradle 캐시설정
+      uses: gradle/actions/setup-gradle@v6
+
+  # 4.gradlew 실행 권한 부여
+  # 깃에 파일 실행권한이 없으면 막힘
+    - name: gradlew 실행 권한 부여
+      run: chmod +x gradlew
+
+  # 1단계: 컴파일 확인===
+    - name: 컴파일 확인
+      run: ./gradlew compileJava compileTestJava --console=plain
+
+  #=========여기부터는 밑에서부터는 나중에 협의 후에 추가=======
+
+  # 2단계 : 테스트 실행
+  # 실제 db연결 테스트라 docker-compose.yaml의 MySQL을 그대로 재사용
+  # --wait는 docker-compose.yaml에 healthcheck가 있어야 제대로 기다려줌
+    - name: MySQL 컨테이너 기동
+      run: docker compose up -d --wait
+
+  # application-local.yaml을 읽어야 datasource가 잡힘 (환경 분리 이후 프로파일 명시 필수)
+    - name: 테스트 실행
+      run: ./gradlew test --console=plain
+      env:
+        SPRING_PROFILES_ACTIVE: local
+
+  # 3단계: 코드스타일 검사
+  # 팀 컨벤션 정해지면 추가
+  #  -name: 코드스타일 검사
+  #
+  #   run: ./gradlew checkstyleMain
