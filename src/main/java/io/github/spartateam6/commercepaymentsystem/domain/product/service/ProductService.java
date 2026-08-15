@@ -65,4 +65,30 @@ public class ProductService {
                     "size는 1 이상 " + MAX_PAGE_SIZE + " 이하이어야 합니다.");
         }
     }
+
+    @Transactional
+    public void deductStock(Long productId, int quantity) {
+        validateQuantity(quantity);
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        product.deductStock(quantity);
+    }
+
+    @Transactional
+    public void increaseStock(Long productId, int quantity) {
+        validateQuantity(quantity);
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        product.increaseStock(quantity);
+    }
+
+    private void validateQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "수량은 1 이상이어야 합니다.");
+        }
+    }
 }
