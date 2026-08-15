@@ -8,12 +8,14 @@ public enum OrderStatus {
             return target == CONFIRMED || target == CANCELLED;
         }
     },
+
     CONFIRMED {
         @Override
         public boolean canTransitTo(OrderStatus target) {
             return target == CANCELLED;
         }
     },
+
     CANCELLED {
         @Override
         public boolean canTransitTo(OrderStatus target) {

@@ -19,6 +19,4 @@ public class MemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         return MemberResponse.from(member);
     }
-
-
 }
