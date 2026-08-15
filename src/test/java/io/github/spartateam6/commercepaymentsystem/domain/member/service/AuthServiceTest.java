@@ -1,5 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.member.service;
 
+import io.github.spartateam6.commercepaymentsystem.domain.member.dto.LoginRequest;
+import io.github.spartateam6.commercepaymentsystem.domain.member.dto.LoginResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.member.dto.SignUpRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
@@ -13,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -89,11 +93,44 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.signUp(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.DUPLICATE_EMAIL.getMessage());
+
         // 중복 이메일이면 회원 저장이 호출됐는지 검증
         verify(memberRepository, never()).save(any());
     }
 
     @Test
-    void login() {
+    void login_성공하면_토큰_발급한다() {
+        // given
+        LoginRequest request = new LoginRequest(
+                "trexs1004@gmail.com",
+                "qwer1234@"
+        );
+        Member member = Member.builder()
+                .id(1L)
+                .email("trexs1004@gmail.com")
+                .password("encoded-password")
+                .build();
+
+        // 이메일로 회원 조회 설정
+        given(memberRepository.findByEmail(request.getEmail()))
+                .willReturn(Optional.of(member));
+
+        // 비밀번호 일치 상황 설정
+        given(passwordEncoder.matches(request.getPassword(),member.getPassword()))
+                .willReturn(true);
+
+       // JWT 생성결과 설정
+        given(jwtProvider.createToken(member.getId())).willReturn("fake-jwt-token");
+
+        // when
+
+        LoginResponse response = authService.login(request);
+
+        //then
+        // JWT 생성이 호출됐는지 검증
+        verify(jwtProvider).createToken(member.getId());
+
+        //발급된 토큰 검증
+        assertThat(response.getAccessToken()).isEqualTo("fake-jwt-token");
     }
 }
