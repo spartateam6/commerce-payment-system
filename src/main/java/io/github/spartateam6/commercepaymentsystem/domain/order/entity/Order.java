@@ -21,6 +21,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ import java.util.List;
 import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_MEMBER_ID_REQUIRED;
 import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_NUMBER_REQUIRED;
 
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Entity
 @Table(
         name = "orders",
@@ -42,11 +47,6 @@ import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorC
                 columnList = "member_id, created_at"
         )
 )
-/*
- * payment/service/PaymentService.MockData가 현재 new Order()를 호출한다.
- * 그 코드가 실제 주문 조회로 교체되기 전까지 전체 프로젝트 컴파일 호환성을
- * 유지하기 위해 public 생성자를 둔다. 이후 PROTECTED로 변경한다.
- */
 public class Order extends AuditingEntity {
 
     @Id
@@ -75,9 +75,6 @@ public class Order extends AuditingEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     @OrderBy("id ASC")
     private List<OrderItem> orderItems = new ArrayList<>();
-
-    public Order() {
-    }
 
     public static Order create(Member member, String orderNumber) {
         if (member == null) {
@@ -118,31 +115,7 @@ public class Order extends AuditingEntity {
         return Collections.unmodifiableList(orderItems);
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public Member getMember() {
-        return member;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    /*
-     * 기존 PaymentService가 setStatus(OrderStatus)를 호출하고 있어 이름을
-     * 유지하되, 임의 상태 변경은 전이 규칙으로 차단한다.
-     */
-    public void setStatus(OrderStatus target) {
+    public void updateStatus(OrderStatus target) {
         if (target == null) {
             throw new IllegalArgumentException("변경할 주문 상태는 필수입니다.");
         }

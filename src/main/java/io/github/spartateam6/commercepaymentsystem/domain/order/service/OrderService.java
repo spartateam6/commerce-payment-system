@@ -52,6 +52,12 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
+    public Order getOrderByOrderNumber(String orderNumber, Long memberId) {
+        return orderRepository.findByOrderNumberAndMember_Id(orderNumber, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+
     public record CreateOrderItem(
             Product product,
             String productName,
