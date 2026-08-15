@@ -34,10 +34,12 @@ public enum ErrorCode {
     ORDER_ITEMS_EMPTY(HttpStatus.BAD_REQUEST, "ORDER_001", "주문할 상품이 없습니다."),
     INVALID_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_002", "주문할 수 없는 상품이 포함되어 있습니다."),
     DUPLICATE_ORDER_ITEM_SELECTION(HttpStatus.BAD_REQUEST, "ORDER_003", "주문 대상 상품이 중복 선택되었습니다."),
-    ORDER_PRODUCT_UNAVAILABLE(HttpStatus.BAD_REQUEST, "ORDER_004", "주문할 수 없는 상품이 포함되어 있습니다."),
     ORDER_STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "ORDER_005", "주문 상품의 재고가 부족합니다."),
     ORDER_MEMBER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_006", "회원 ID는 필수입니다."),
     ORDER_NUMBER_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_007", "주문번호는 필수입니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_008", "주문을 찾을 수 없습니다."),
+    ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
+
 
     // Payment
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_001", "결제 정보를 찾을 수 없습니다."),

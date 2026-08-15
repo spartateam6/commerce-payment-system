@@ -1,17 +1,26 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.entity;
+
+import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Setter;
+import jakarta.persistence.UniqueConstraint;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,98 +30,129 @@ import java.util.List;
 import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_MEMBER_ID_REQUIRED;
 import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_NUMBER_REQUIRED;
 
-@Getter
-@Setter
 @Entity
 @Table(
         name = "orders",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_orders_order_number",
-                        columnNames = "order_number"
-                )
-        },
-        indexes = {
-                @Index(
-                        name = "idx_orders_member_created_at",
-                        columnList = "member_id, created_at"
-                )
-        }
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_orders_order_number",
+                columnNames = "order_number"
+        ),
+        indexes = @Index(
+                name = "idx_orders_member_created_at",
+                columnList = "member_id, created_at"
+        )
 )
-// TODO : 추후에 PROTECTED로 바꾸기
-// TODO : setter 추후에 제거하겠습니다.
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+/*
+ * payment/service/PaymentService.MockData가 현재 new Order()를 호출한다.
+ * 그 코드가 실제 주문 조회로 교체되기 전까지 전체 프로젝트 컴파일 호환성을
+ * 유지하기 위해 public 생성자를 둔다. 이후 PROTECTED로 변경한다.
+ */
 public class Order extends AuditingEntity {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @Column(name = "order_id")
-        private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
+    private Long id;
 
-        @Column(name = "member_id", nullable = false)
-        private Long memberId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "member_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_orders_member")
+    )
+    private Member member;
 
-        @Column(name = "order_number", nullable = false, length = 50)
-        private String orderNumber;
+    @Column(name = "order_number", nullable = false, length = 50)
+    private String orderNumber;
 
-        @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
-        private BigDecimal totalAmount;
+    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal totalAmount;
 
-        @Enumerated(EnumType.STRING)
-        @Column(name = "status", nullable = false, length = 30)
-        private OrderStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private OrderStatus status;
 
-        @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-        @OrderBy("id ASC")
-        private List<OrderItem> orderItems = new ArrayList<>();
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OrderBy("id ASC")
+    private List<OrderItem> orderItems = new ArrayList<>();
 
-        public static Order create(
-                Long memberId,
-                String orderNumber
-        ) {
-            if (memberId == null) {
-                throw new BusinessException(ORDER_MEMBER_ID_REQUIRED);
-            }
+    public Order() {
+    }
 
-            if (orderNumber == null || orderNumber.isBlank()) {
-                throw new BusinessException(ORDER_NUMBER_REQUIRED);
-            }
-
-            Order order = new Order();
-
-            order.memberId = memberId;
-            order.orderNumber = orderNumber;
-            order.totalAmount = BigDecimal.ZERO;
-            order.status = OrderStatus.PAYMENT_PENDING;
-
-            return order;
+    public static Order create(Member member, String orderNumber) {
+        if (member == null) {
+            throw new BusinessException(ORDER_MEMBER_ID_REQUIRED);
         }
 
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new BusinessException(ORDER_NUMBER_REQUIRED);
+        }
 
-         // OrderItem 생성과 연관관계 설정을 Order가 관리한다.
-         // //주문 상품이 추가될 때 주문 총액도 함께 증가한다.
-        public void addOrderItem(
-                Long productId,
-                String productName,
-                BigDecimal unitPrice,
-                Integer quantity
-        ) {
-            OrderItem orderItem = OrderItem.create(
-                    this,
-                    productId,
-                    productName,
-                    unitPrice,
-                    quantity
+        Order order = new Order();
+        order.member = member;
+        order.orderNumber = orderNumber;
+        order.totalAmount = BigDecimal.ZERO;
+        order.status = OrderStatus.PAYMENT_PENDING;
+        return order;
+    }
+
+    public void addOrderItem(
+            Product product,
+            String productName,
+            BigDecimal unitPrice,
+            Integer quantity
+    ) {
+        OrderItem orderItem = OrderItem.create(
+                this,
+                product,
+                productName,
+                unitPrice,
+                quantity
+        );
+
+        orderItems.add(orderItem);
+        totalAmount = totalAmount.add(orderItem.calculateLineAmount());
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return Collections.unmodifiableList(orderItems);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Member getMember() {
+        return member;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    /*
+     * 기존 PaymentService가 setStatus(OrderStatus)를 호출하고 있어 이름을
+     * 유지하되, 임의 상태 변경은 전이 규칙으로 차단한다.
+     */
+    public void setStatus(OrderStatus target) {
+        if (target == null) {
+            throw new IllegalArgumentException("변경할 주문 상태는 필수입니다.");
+        }
+
+        if (status != null && status != target && !status.canTransitTo(target)) {
+            throw new IllegalStateException(
+                    "주문 상태를 " + status + "에서 " + target + "으로 변경할 수 없습니다."
             );
-
-            orderItems.add(orderItem);
-            totalAmount = totalAmount.add(
-                    orderItem.calculateLineAmount()
-            );
         }
 
-        // 외부에서 orderItems 컬렉션을 직접 변경하지 못하게 한다.
-        public List<OrderItem> getOrderItems() {
-            return Collections.unmodifiableList(orderItems);
-        }
+        status = target;
+    }
 }
