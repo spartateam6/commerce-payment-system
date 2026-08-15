@@ -1,8 +1,8 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.service;
 
-import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
+import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final OrderService orderService;
 
     private void validatePayment(Long memberId, Payment payment, Order order, Integer totalPrice) {
         // 주문자와 결제 정보 일치하는지?
@@ -39,8 +40,7 @@ public class PaymentService {
     public boolean requestPayment(Long memberId, Long paymentId, PaymentRequestDto paymentRequestDto) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        Order order = MockData.getOrder(paymentRequestDto.orderNumber()); // TODO: OrderDTO 로 받을 수 있게 (orderitem, order join fetch 로)
-                                                                          // order.id, orderitem.quantity, ...
+        Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
         validatePayment(memberId, payment, order, paymentRequestDto.totalPrice());
 
@@ -80,7 +80,7 @@ public class PaymentService {
     public void cancelPayment(Long memberId, Long paymentId, PaymentCancelRequestDto paymentCancelRequestDto) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        Order order = MockData.getOrder(paymentCancelRequestDto.orderNumber());
+        Order order = orderService.getOrderByOrderNumber(paymentCancelRequestDto.orderNumber(), memberId);
 
         // 내 주문인지?
         if (!order.getId().equals(memberId)) {
@@ -98,7 +98,7 @@ public class PaymentService {
             // 결제 전 취소
 
             // 주문 취소
-            order.setStatus(OrderStatus.CANCELLED); // TODO: OrderStatus Enum 으로 변경
+            order.updateStatus(OrderStatus.CANCELLED); // TODO: OrderStatus Enum 으로 변경
             // 결제 실패
             payment.setStatus(PaymentStatus.FAILED);
             // 재고 복구
@@ -128,10 +128,6 @@ public class PaymentService {
 
     // TODO: replace Mock data to real data
     static class MockData {
-        private static Order getOrder(String orderNumber) {
-            return new Order();
-        }
-
         // 재고 복구
         private static void restoreStock(Long productId, Integer stock) {
             //...

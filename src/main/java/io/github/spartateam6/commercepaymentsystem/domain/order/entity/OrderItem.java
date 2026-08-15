@@ -13,9 +13,14 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Entity
 @Table(
         name = "order_items",
@@ -56,9 +61,6 @@ public class OrderItem extends AuditingEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    protected OrderItem() {
-    }
-
     static OrderItem create(
             Order order,
             Product product,
@@ -93,29 +95,5 @@ public class OrderItem extends AuditingEntity {
 
     public BigDecimal calculateLineAmount() {
         return unitPriceSnapshot.multiply(BigDecimal.valueOf(quantity));
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public String getProductNameSnapshot() {
-        return productNameSnapshot;
-    }
-
-    public BigDecimal getUnitPriceSnapshot() {
-        return unitPriceSnapshot;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
     }
 }
