@@ -1,6 +1,8 @@
 package io.github.spartateam6.commercepaymentsystem.domain.product.entity;
 
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,4 +55,18 @@ public class Product extends AuditingEntity {
     @NotNull
     @Column(name = "category", nullable = false, length = 30)
     private String category;
+
+    @NotNull
+    @Column(name = "stock", nullable = false)
+    private Integer stock;
+
+    public void deductStock(int quantity) {
+        if (this.stock < quantity) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
+        }
+        this.stock -= quantity;
+    }
+    public void inccreaseStock(int quantity) {
+        this.stock += quantity;
+    }
 }
