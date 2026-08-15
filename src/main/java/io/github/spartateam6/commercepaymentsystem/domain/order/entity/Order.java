@@ -2,6 +2,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.order.entity;
 
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.CascadeType;
@@ -117,11 +118,12 @@ public class Order extends AuditingEntity {
 
     public void updateStatus(OrderStatus target) {
         if (target == null) {
-            throw new IllegalArgumentException("변경할 주문 상태는 필수입니다.");
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "변경할 주문 상태는 필수입니다.");
         }
 
         if (status != target && !status.canTransitTo(target)) {
-            throw new IllegalStateException(
+            throw new BusinessException(
+                    ErrorCode.INVALID_INPUT,
                     "주문 상태를 " + status + "에서 " + target + "으로 변경할 수 없습니다."
             );
         }
