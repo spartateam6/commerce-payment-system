@@ -120,7 +120,7 @@ public class Order extends AuditingEntity {
             throw new IllegalArgumentException("변경할 주문 상태는 필수입니다.");
         }
 
-        if (status != null && status != target && !status.canTransitTo(target)) {
+        if (status != target && !status.canTransitTo(target)) {
             throw new IllegalStateException(
                     "주문 상태를 " + status + "에서 " + target + "으로 변경할 수 없습니다."
             );
