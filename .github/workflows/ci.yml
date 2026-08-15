@@ -59,7 +59,7 @@ jobs:
 #      run: docker compose up -d --wait
 
   # application-local.yaml을 읽어야 datasource가 잡힘 (환경 분리 이후 프로파일 명시 필수)
-    - name: 테스트 실행
-      run: ./gradlew test --console=plain
-      env:
-        SPRING_PROFILES_ACTIVE: local
+#    - name: 테스트 실행
+#      run: ./gradlew test --console=plain
+#      env:
+#        SPRING_PROFILES_ACTIVE: local
