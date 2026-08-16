@@ -14,6 +14,7 @@ DELETE FROM member;
 
 -- ---------------------------------------------------------
 -- 1. MEMBER
+-- 테스트 계정 비번은 모두 testpwd1! 입니다
 -- ---------------------------------------------------------
 
 INSERT INTO member (
@@ -32,7 +33,7 @@ VALUES
         NOW(6),
         'user1@test.com',
         '테스트유저1',
-        'TEST_PASSWORD',
+        '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
         '010-1111-1111'
     ),
     (
@@ -41,7 +42,7 @@ VALUES
         NOW(6),
         'user2@test.com',
         '테스트유저2',
-        'TEST_PASSWORD',
+        '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
         '010-2222-2222'
     );
 
