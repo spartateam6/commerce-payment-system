@@ -22,7 +22,12 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
 
-    private void validatePayment(Long memberId, Payment payment, Order order, Integer totalPrice) {
+    private void validatePayment(
+            Long memberId,
+            Payment payment,
+            Order order,
+            Integer totalPrice
+    ) {
         // 주문자와 결제 정보 일치하는지?
         if (!order.getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
@@ -45,8 +50,7 @@ public class PaymentService {
         validatePayment(memberId, payment, order, paymentRequestDto.totalPrice());
 
         // 주문 상태 검증
-        // TODO: OrderStatus Enum 으로 처리
-        if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals("PENDING")) {
+        if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
             throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
         }
 
@@ -88,12 +92,11 @@ public class PaymentService {
         }
 
         // 이미 주문 취소?
-        if (order.getStatus().equals("CANCELED")) { // TODO: OrderStatus Enum 으로 대체
+        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
             throw new BusinessException(ErrorCode.ALREADY_PROCESSED_REFUND);
         }
 
-        // TODO: OrderStatus Enum 으로 대체
-        if (payment.getStatus().equals(PaymentStatus.PENDING) && order.getStatus().equals("PENDING")) {
+        if (payment.getStatus().equals(PaymentStatus.PENDING) && order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
             // Order = 결제대기, Payment = 대기
             // 결제 전 취소
 
@@ -105,13 +108,12 @@ public class PaymentService {
             // MockData.restoreStock(order.getProduct().getId(), order.getQuantity());
         }
 
-        // TODO: OrderStatus Enum 으로 변경
-        if (payment.getStatus().equals(PaymentStatus.PAID) && order.getStatus().equals("ORDERED")) {
+        if (payment.getStatus().equals(PaymentStatus.PAID) && order.getStatus().equals(OrderStatus.CONFIRMED)) {
             // Order = 주문완료, Payment = 완료
             // 결제 후 취소 (환불)
 
             // 주문 취소
-            //order.setStatus("CANCELED"); // TODO: OrderStatus Enum 으로 변경
+            order.updateStatus(OrderStatus.CANCELLED);
             // 결제 취소
             payment.setStatus(PaymentStatus.REFUND);
             // 재고 복구
