@@ -1,5 +1,6 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.service;
 
+import io.github.spartateam6.commercepaymentsystem.domain.cart.service.CartService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
@@ -23,6 +24,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
     private final OrderItemService orderItemService;
+    private final CartService cartService;
 
     @Transactional
     public boolean requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
@@ -56,7 +58,7 @@ public class PaymentService {
 
         order.updateStatus(OrderStatus.CONFIRMED);
 
-        // TODO: 장바구니 비우기 (CartItem 삭제)
+        cartService.clearCart(memberId);
 
         return true;
     }
