@@ -31,7 +31,7 @@ public class PaymentService {
         Payment payment = getPaymentByOrderNumber(paymentRequestDto.orderNumber());
         Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
-        validatePayment(memberId, payment, order, paymentRequestDto.totalPrice());
+        validatePayment(memberId, payment, order);
 
         // 주문 상태 검증
         if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
@@ -44,7 +44,7 @@ public class PaymentService {
 
         // 결제 실패
         if (!paymentSuccess) {
-            payment.setStatus(PaymentStatus.FAILED);
+            payment.changeStatus(PaymentStatus.FAILED);
             // 차감한 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());
 
@@ -53,7 +53,7 @@ public class PaymentService {
             return false;
         }
 
-        payment.paySuccess();
+        payment.changeStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
 
         order.updateStatus(OrderStatus.CONFIRMED);
@@ -69,7 +69,7 @@ public class PaymentService {
         Order order = orderService.getOrderByOrderNumber(paymentCancelRequestDto.orderNumber(), memberId);
 
         // 내 주문인지?
-        if (!order.getId().equals(memberId)) {
+        if (!order.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
@@ -88,7 +88,7 @@ public class PaymentService {
             // 주문 취소
             order.updateStatus(OrderStatus.CANCELLED);
             // 결제 실패
-            payment.setStatus(PaymentStatus.FAILED);
+            payment.changeStatus(PaymentStatus.FAILED);
             // 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());
         }
@@ -103,7 +103,7 @@ public class PaymentService {
             // 주문 취소
             order.updateStatus(OrderStatus.CANCELLED);
             // 결제 취소
-            payment.setStatus(PaymentStatus.REFUND);
+            payment.changeStatus(PaymentStatus.REFUND);
             // 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());
 
@@ -126,18 +126,16 @@ public class PaymentService {
     private void validatePayment(
             Long memberId,
             Payment payment,
-            Order order,
-            Integer totalPrice
+            Order order
     ) {
         // 주문자와 결제 정보 일치하는지?
-        if (!order.getId().equals(memberId)) {
+        if (!order.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
         // 결제 금액 검증
         // Order DB 값 == 결제할 가격 ?
-        // front 에서 넘어온 가격 == 결제할 가격 ?
-        if (!payment.getAmount().equals(order.getTotalAmount()) || !payment.getAmount().equals(totalPrice)) {
+        if (!payment.getAmount().equals(order.getTotalAmount())) {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
     }
