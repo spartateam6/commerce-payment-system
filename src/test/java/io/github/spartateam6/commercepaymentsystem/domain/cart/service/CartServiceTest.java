@@ -2,10 +2,12 @@ package io.github.spartateam6.commercepaymentsystem.domain.cart.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.request.CartItemQuantityUpdateRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.Cart;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.CartItem;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartItemRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductRepository;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -119,5 +122,53 @@ class CartServiceTest {
                 .hasMessage(ErrorCode.INSUFFICIENT_STOCK.getMessage());
 
         verify(cartItem, never()).changeQuantity(3);
+    }
+
+    @Test
+    void deleteItem_본인_장바구니_항목이면_삭제한다() {
+        Member member = mock(Member.class);
+        Cart cart = mock(Cart.class);
+        CartItem cartItem = mock(CartItem.class);
+
+        given(cartItemRepository.findById(10L))
+                .willReturn(Optional.of(cartItem));
+        given(cartItem.getCart()).willReturn(cart);
+        given(cart.getMember()).willReturn(member);
+        given(member.getId()).willReturn(1L);
+
+        cartService.deleteItem(1L, 10L);
+
+        verify(cartItemRepository).delete(cartItem);
+    }
+
+    @Test
+    void deleteItem_항목이_없으면_예외를_던진다() {
+        given(cartItemRepository.findById(10L))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cartService.deleteItem(1L, 10L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.CART_ITEM_NOT_FOUND.getMessage());
+
+        verify(cartItemRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteItem_다른_회원의_항목이면_예외를_던진다() {
+        Member member = mock(Member.class);
+        Cart cart = mock(Cart.class);
+        CartItem cartItem = mock(CartItem.class);
+
+        given(cartItemRepository.findById(10L))
+                .willReturn(Optional.of(cartItem));
+        given(cartItem.getCart()).willReturn(cart);
+        given(cart.getMember()).willReturn(member);
+        given(member.getId()).willReturn(2L);
+
+        assertThatThrownBy(() -> cartService.deleteItem(1L, 10L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.FORBIDDEN_ACCESS.getMessage());
+
+        verify(cartItemRepository, never()).delete(cartItem);
     }
 }

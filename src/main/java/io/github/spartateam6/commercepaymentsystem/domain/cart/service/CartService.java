@@ -124,6 +124,20 @@ public class CartService {
         return CartItemResponse.from(cartItem);
     }
 
+    @Transactional
+    public void deleteItem(Long memberId, Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.CART_ITEM_NOT_FOUND
+                ));
+
+        if (!cartItem.getCart().getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+
+        cartItemRepository.delete(cartItem);
+    }
+
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
 
