@@ -1,6 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.cart.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.request.CartItemAddRequest;
+import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.request.CartItemQuantityUpdateRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.Cart;
@@ -95,6 +96,48 @@ public class CartService {
 
         return CartItemResponse.from(cartItem);
     }
+
+    @Transactional
+    public CartItemResponse updateItemQuantity(
+            Long memberId,
+            Long cartItemId,
+            CartItemQuantityUpdateRequest request
+    ) {
+        if (request.quantity() <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+        }
+
+        CartItem cartItem = cartItemRepository.findByIdAndCart_Member_Id(
+                        cartItemId,
+                        memberId
+                )
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.CART_ITEM_NOT_FOUND
+                ));
+
+        if (request.quantity() > cartItem.getProduct().getStock()) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
+        }
+
+        cartItem.changeQuantity(request.quantity());
+
+        return CartItemResponse.from(cartItem);
+    }
+
+    @Transactional
+    public void deleteItem(Long memberId, Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.CART_ITEM_NOT_FOUND
+                ));
+
+        if (!cartItem.getCart().getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+
+        cartItemRepository.delete(cartItem);
+    }
+
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
 

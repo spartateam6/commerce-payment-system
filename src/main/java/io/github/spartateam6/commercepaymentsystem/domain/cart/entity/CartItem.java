@@ -46,4 +46,8 @@ public class CartItem extends AuditingEntity {
     public void increaseQuantity(Integer additionalQuantity) {
         this.quantity += additionalQuantity;
     }
+
+    public void changeQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 }

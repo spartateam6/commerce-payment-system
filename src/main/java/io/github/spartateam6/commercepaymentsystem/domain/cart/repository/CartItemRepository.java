@@ -13,6 +13,12 @@ public interface CartItemRepository
             Long cartId,
             Long productId
     );
+
+    Optional<CartItem> findByIdAndCart_Member_Id(
+            Long cartItemId,
+            Long memberId
+    );
+
     List<CartItem> findAllByCart_Id(
             Long cartId
     );
