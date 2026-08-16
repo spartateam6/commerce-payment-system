@@ -3,14 +3,13 @@ package io.github.spartateam6.commercepaymentsystem.domain.order.dto;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record OrderDetailResponse(
         Long orderId,
         String orderNumber,
-        BigDecimal totalAmount,
+        Integer totalAmount,
         OrderStatus orderStatus,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
@@ -37,7 +36,7 @@ public record OrderDetailResponse(
 
     public record PaymentResponse(
             Long paymentId,
-            BigDecimal amount,
+            Integer amount,
             String status,
             LocalDateTime completedAt,
             LocalDateTime createdAt

@@ -17,7 +17,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -55,8 +54,8 @@ public class OrderItem extends AuditingEntity {
     @Column(name = "product_name_snapshot", nullable = false, length = 200)
     private String productNameSnapshot;
 
-    @Column(name = "unit_price_snapshot", nullable = false, precision = 15, scale = 2)
-    private BigDecimal unitPriceSnapshot;
+    @Column(name = "unit_price_snapshot", nullable = false)
+    private Integer unitPriceSnapshot;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
@@ -65,7 +64,7 @@ public class OrderItem extends AuditingEntity {
             Order order,
             Product product,
             String productName,
-            BigDecimal unitPrice,
+            Integer unitPrice,
             Integer quantity
     ) {
         if (order == null) {
@@ -77,7 +76,7 @@ public class OrderItem extends AuditingEntity {
         if (productName == null || productName.isBlank()) {
             throw new IllegalArgumentException("상품명은 필수입니다.");
         }
-        if (unitPrice == null || unitPrice.signum() < 0) {
+        if (unitPrice == null || unitPrice < 0) {
             throw new IllegalArgumentException("상품 가격은 0 이상이어야 합니다.");
         }
         if (quantity == null || quantity <= 0) {
@@ -93,7 +92,7 @@ public class OrderItem extends AuditingEntity {
         return orderItem;
     }
 
-    public BigDecimal calculateLineAmount() {
-        return unitPriceSnapshot.multiply(BigDecimal.valueOf(quantity));
+    public Integer calculateLineAmount() {
+        return unitPriceSnapshot * quantity;
     }
 }
