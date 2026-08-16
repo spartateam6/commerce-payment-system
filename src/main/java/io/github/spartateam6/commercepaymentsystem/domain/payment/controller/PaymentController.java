@@ -29,9 +29,7 @@ public class PaymentController {
             @Valid @RequestBody PaymentRequestDto paymentRequestDto,
             @MemberId Long memberId
     ) {
-        Long mockdataPaymentId = 1L;
-
-        boolean success = paymentService.requestPayment(memberId, mockdataPaymentId, paymentRequestDto);
+        boolean success = paymentService.requestPayment(memberId, paymentRequestDto);
 
         if (!success)
             return ApiResponse.error(ErrorCode.PAYMENT_NOT_PAID, new PaymentResponse("fail"));
@@ -44,9 +42,7 @@ public class PaymentController {
             @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto,
             @MemberId Long memberId
     ) {
-        Long mockdataPaymentId = 1L;
-
-        paymentService.cancelPayment(memberId, mockdataPaymentId, paymentCancelRequestDto);
+        paymentService.cancelPayment(memberId, paymentCancelRequestDto);
         return ApiResponse.ok();
     }
 
