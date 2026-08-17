@@ -26,7 +26,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,8 +65,8 @@ public class Order extends AuditingEntity {
     @Column(name = "order_number", nullable = false, length = 50)
     private String orderNumber;
 
-    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "total_amount", nullable = false)
+    private Integer totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -89,7 +88,7 @@ public class Order extends AuditingEntity {
         Order order = new Order();
         order.member = member;
         order.orderNumber = orderNumber;
-        order.totalAmount = BigDecimal.ZERO;
+        order.totalAmount = 0;
         order.status = OrderStatus.PAYMENT_PENDING;
         return order;
     }
@@ -97,7 +96,7 @@ public class Order extends AuditingEntity {
     public void addOrderItem(
             Product product,
             String productName,
-            BigDecimal unitPrice,
+            Integer unitPrice,
             Integer quantity
     ) {
         OrderItem orderItem = OrderItem.create(
@@ -109,7 +108,7 @@ public class Order extends AuditingEntity {
         );
 
         orderItems.add(orderItem);
-        totalAmount = totalAmount.add(orderItem.calculateLineAmount());
+        totalAmount += orderItem.calculateLineAmount();
     }
 
     public List<OrderItem> getOrderItems() {

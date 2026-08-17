@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
@@ -152,7 +151,7 @@ public class OrderIntegrationService {
     /**
      * 결제 도메인에 아직 없는 결제 대기 생성 Mock이다.
      */
-    public void createWaitingPayment(Order order, BigDecimal amount) {
+    public void createWaitingPayment(Order order, Integer amount) {
         ensureTransactionActive();
 
         if (mockPayments.containsKey(order.getId())) {
@@ -213,7 +212,7 @@ public class OrderIntegrationService {
                                     product,
                                     productId,
                                     response.name(),
-                                    BigDecimal.valueOf(response.price()),
+                                    response.price(),
                                     stock.value()
                             )
                     );
@@ -252,7 +251,7 @@ public class OrderIntegrationService {
             Product product,
             Long productId,
             String productName,
-            BigDecimal unitPrice,
+            Integer unitPrice,
             Integer stock
     ) {
     }
@@ -260,7 +259,7 @@ public class OrderIntegrationService {
     public record PaymentInformation(
             Long paymentId,
             Long orderId,
-            BigDecimal amount,
+            Integer amount,
             String status,
             LocalDateTime completedAt,
             LocalDateTime createdAt
