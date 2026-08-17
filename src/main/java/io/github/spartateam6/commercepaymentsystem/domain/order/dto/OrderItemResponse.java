@@ -2,16 +2,15 @@ package io.github.spartateam6.commercepaymentsystem.domain.order.dto;
 
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderItem;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record OrderItemResponse(
         Long orderItemId,
         Long productId,
         String productName,
-        BigDecimal unitPrice,
+        Integer unitPrice,
         Integer quantity,
-        BigDecimal lineAmount,
+        Integer lineAmount,
         LocalDateTime createdAt
 ) {
     public static OrderItemResponse from(OrderItem orderItem) {

@@ -15,7 +15,6 @@ import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessExce
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -199,7 +198,7 @@ public class OrderFacade {
         }
 
         List<PreparedItem> items = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        int totalAmount = 0;
 
         for (OrderIntegrationService.CartItemForOrder cartItem : cartItems) {
             OrderIntegrationService.ProductForOrder product =
@@ -212,8 +211,7 @@ public class OrderFacade {
                 );
             }
 
-            BigDecimal lineAmount = product.unitPrice()
-                    .multiply(BigDecimal.valueOf(cartItem.quantity()));
+            int lineAmount = product.unitPrice() * cartItem.quantity();
 
             items.add(new PreparedItem(
                     cartItem.cartItemId(),
@@ -224,7 +222,7 @@ public class OrderFacade {
                     lineAmount
             ));
 
-            totalAmount = totalAmount.add(lineAmount);
+            totalAmount += lineAmount;
         }
 
         return new PreparedOrder(List.copyOf(items), totalAmount);
@@ -245,15 +243,15 @@ public class OrderFacade {
             Long cartItemId,
             Product product,
             String productName,
-            BigDecimal unitPrice,
+            Integer unitPrice,
             Integer quantity,
-            BigDecimal lineAmount
+            Integer lineAmount
     ) {
     }
 
     private record PreparedOrder(
             List<PreparedItem> items,
-            BigDecimal totalAmount
+            Integer totalAmount
     ) {
     }
 }
