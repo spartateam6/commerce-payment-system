@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -47,6 +48,17 @@ public class Payment extends AuditingEntity {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Builder
+    public Payment(
+        Order order,
+        Integer amount,
+        PaymentStatus status
+    ) {
+        this.order = order;
+        this.amount = amount;
+        this.status = status;
+    }
 
     public void changeStatus(PaymentStatus newStatus) {
         if (!this.status.canTransitTo(newStatus)) {
