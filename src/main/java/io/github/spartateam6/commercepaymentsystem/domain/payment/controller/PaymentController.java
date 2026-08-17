@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentReq
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,9 @@ public class PaymentController {
     ) {
         boolean success = paymentService.requestPayment(memberId, paymentRequestDto);
 
-if (!success) {
-    throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
-}
+        if (!success) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
+        }
 
         return ApiResponse.ok(new PaymentResponse("ok"));
     }
