@@ -11,6 +11,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.product.repository.Pro
 import io.github.spartateam6.commercepaymentsystem.domain.product.service.ProductService;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -29,6 +30,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class OrderIntegrationService {
 
     private final MemberRepository memberRepository;
@@ -39,18 +41,6 @@ public class OrderIntegrationService {
     private final Map<Long, MutableStock> mockStocks = new ConcurrentHashMap<>();
     private final Map<Long, PaymentInformation> mockPayments = new ConcurrentHashMap<>();
     private final AtomicLong paymentSequence = new AtomicLong(1L);
-
-    public OrderIntegrationService(
-            MemberRepository memberRepository,
-            ProductRepository productRepository,
-            CartService cartService,
-            ProductService productService
-    ) {
-        this.memberRepository = memberRepository;
-        this.productRepository = productRepository;
-        this.cartService = cartService;
-        this.productService = productService;
-    }
 
     /**
      * MemberService에는 엔티티를 반환하는 메서드가 아직 없으므로,
@@ -198,12 +188,9 @@ public class OrderIntegrationService {
                         throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
                     }
 
-                    /* 기존 ProductService#getProduct를 그대로 사용한다. */
-                    ProductResponse response = productService.getProduct(productId);
-
                     MutableStock stock = mockStocks.computeIfAbsent(
                             productId,
-                            ignored -> new MutableStock(response.stock())
+                            ignored -> new MutableStock(product.getStock())
                     );
 
                     result.put(
@@ -211,8 +198,8 @@ public class OrderIntegrationService {
                             new ProductForOrder(
                                     product,
                                     productId,
-                                    response.name(),
-                                    response.price(),
+                                    product.getName(),
+                                    product.getPrice(),
                                     stock.value()
                             )
                     );
