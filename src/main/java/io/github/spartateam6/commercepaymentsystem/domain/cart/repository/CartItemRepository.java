@@ -22,4 +22,6 @@ public interface CartItemRepository
     List<CartItem> findAllByCart_Id(
             Long cartId
     );
+
+    void deleteAllByCart_Id(Long cartId);
 }

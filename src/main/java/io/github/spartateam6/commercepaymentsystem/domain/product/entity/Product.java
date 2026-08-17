@@ -53,4 +53,11 @@ public class Product extends AuditingEntity {
     @NotNull
     @Column(name = "category", nullable = false, length = 30)
     private String category;
+
+    public void addStock(Integer stock) {
+        if (stock < 0) {
+            throw new IllegalArgumentException("재고 수량은 0 이상이어야 합니다.");
+        }
+        this.stock += stock;
+    }
 }

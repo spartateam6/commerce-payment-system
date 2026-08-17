@@ -163,4 +163,12 @@ public class CartService {
 
         return CartResponse.of(cart.getId(), items);
     }
+
+    @Transactional
+    public void clearCart(Long memberId) {
+        Cart cart = cartRepository.findByMember_Id(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+        cartItemRepository.deleteAllByCart_Id(cart.getId());
+    }
 }

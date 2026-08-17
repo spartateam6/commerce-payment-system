@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentReq
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +30,11 @@ public class PaymentController {
             @Valid @RequestBody PaymentRequestDto paymentRequestDto,
             @MemberId Long memberId
     ) {
-        Long mockdataPaymentId = 1L;
+        boolean success = paymentService.requestPayment(memberId, paymentRequestDto);
 
-        boolean success = paymentService.requestPayment(memberId, mockdataPaymentId, paymentRequestDto);
-
-        if (!success)
-            return ApiResponse.error(ErrorCode.PAYMENT_NOT_PAID, new PaymentResponse("fail"));
+        if (!success) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
+        }
 
         return ApiResponse.ok(new PaymentResponse("ok"));
     }
@@ -44,9 +44,7 @@ public class PaymentController {
             @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto,
             @MemberId Long memberId
     ) {
-        Long mockdataPaymentId = 1L;
-
-        paymentService.cancelPayment(memberId, mockdataPaymentId, paymentCancelRequestDto);
+        paymentService.cancelPayment(memberId, paymentCancelRequestDto);
         return ApiResponse.ok();
     }
 

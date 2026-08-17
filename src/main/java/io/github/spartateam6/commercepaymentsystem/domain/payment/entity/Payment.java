@@ -12,22 +12,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "payment")
 @AttributeOverride(name = "createdAt", column = @Column(nullable = false))
@@ -38,8 +32,8 @@ public class Payment extends AuditingEntity {
     private Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
 
     @NotNull
@@ -54,9 +48,15 @@ public class Payment extends AuditingEntity {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    public void paySuccess() {
-        this.status = PaymentStatus.PAID;
-        this.completedAt = LocalDateTime.now();
+    public void changeStatus(PaymentStatus newStatus) {
+        if (!this.status.canTransitTo(newStatus)) {
+            throw new IllegalArgumentException("Invalid status transition from " + this.status + " to " + newStatus);
+        }
+
+        this.status = newStatus;
+        if (newStatus == PaymentStatus.PAID) {
+            this.completedAt = LocalDateTime.now();
+        }
     }
 
 }
