@@ -31,8 +31,9 @@ public class PaymentController {
     ) {
         boolean success = paymentService.requestPayment(memberId, paymentRequestDto);
 
-        if (!success)
-            return ApiResponse.error(ErrorCode.PAYMENT_NOT_PAID, new PaymentResponse("fail"));
+if (!success) {
+    throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
+}
 
         return ApiResponse.ok(new PaymentResponse("ok"));
     }
