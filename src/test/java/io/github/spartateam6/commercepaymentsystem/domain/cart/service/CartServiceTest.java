@@ -52,11 +52,16 @@ class CartServiceTest {
         Long cartItemId = 10L;
         CartItemQuantityUpdateRequest request =
                 new CartItemQuantityUpdateRequest(3);
+        Member member = mock(Member.class);
+        Cart cart = mock(Cart.class);
         Product product = mock(Product.class);
         CartItem cartItem = mock(CartItem.class);
 
-        given(cartItemRepository.findByIdAndCart_Member_Id(cartItemId, memberId))
+        given(cartItemRepository.findById(cartItemId))
                 .willReturn(Optional.of(cartItem));
+        given(cartItem.getCart()).willReturn(cart);
+        given(cart.getMember()).willReturn(member);
+        given(member.getId()).willReturn(memberId);
         given(cartItem.getProduct()).willReturn(product);
         given(product.getStock()).willReturn(5);
         given(cartItem.getId()).willReturn(cartItemId);
@@ -85,13 +90,12 @@ class CartServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.INVALID_QUANTITY.getMessage());
 
-        verify(cartItemRepository, never())
-                .findByIdAndCart_Member_Id(10L, 1L);
+        verify(cartItemRepository, never()).findById(10L);
     }
 
     @Test
-    void updateItemQuantity_본인_항목이_없으면_예외를_던진다() {
-        given(cartItemRepository.findByIdAndCart_Member_Id(10L, 1L))
+    void updateItemQuantity_항목이_없으면_예외를_던진다() {
+        given(cartItemRepository.findById(10L))
                 .willReturn(Optional.empty());
 
         assertThatThrownBy(() -> cartService.updateItemQuantity(
@@ -104,12 +108,40 @@ class CartServiceTest {
     }
 
     @Test
+    void updateItemQuantity_다른_회원의_항목이면_예외를_던진다() {
+        Member member = mock(Member.class);
+        Cart cart = mock(Cart.class);
+        CartItem cartItem = mock(CartItem.class);
+
+        given(cartItemRepository.findById(10L))
+                .willReturn(Optional.of(cartItem));
+        given(cartItem.getCart()).willReturn(cart);
+        given(cart.getMember()).willReturn(member);
+        given(member.getId()).willReturn(2L);
+
+        assertThatThrownBy(() -> cartService.updateItemQuantity(
+                1L,
+                10L,
+                new CartItemQuantityUpdateRequest(1)
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.FORBIDDEN_ACCESS.getMessage());
+
+        verify(cartItem, never()).changeQuantity(any());
+    }
+
+    @Test
     void updateItemQuantity_재고를_초과하면_예외를_던진다() {
+        Member member = mock(Member.class);
+        Cart cart = mock(Cart.class);
         Product product = mock(Product.class);
         CartItem cartItem = mock(CartItem.class);
 
-        given(cartItemRepository.findByIdAndCart_Member_Id(10L, 1L))
+        given(cartItemRepository.findById(10L))
                 .willReturn(Optional.of(cartItem));
+        given(cartItem.getCart()).willReturn(cart);
+        given(cart.getMember()).willReturn(member);
+        given(member.getId()).willReturn(1L);
         given(cartItem.getProduct()).willReturn(product);
         given(product.getStock()).willReturn(2);
 

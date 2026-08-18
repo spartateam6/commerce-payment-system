@@ -107,13 +107,14 @@ public class CartService {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
-        CartItem cartItem = cartItemRepository.findByIdAndCart_Member_Id(
-                        cartItemId,
-                        memberId
-                )
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.CART_ITEM_NOT_FOUND
                 ));
+
+        if (!cartItem.getCart().getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
 
         if (request.quantity() > cartItem.getProduct().getStock()) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
