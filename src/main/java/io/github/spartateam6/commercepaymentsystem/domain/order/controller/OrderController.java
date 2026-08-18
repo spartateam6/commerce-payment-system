@@ -11,6 +11,7 @@ import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -27,15 +28,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderFacade orderFacade;
     private final OrderService orderService;
-
-    public OrderController(OrderFacade orderFacade, OrderService orderService) {
-        this.orderFacade = orderFacade;
-        this.orderService = orderService;
-    }
 
     @PostMapping("/preview")
     public ResponseEntity<ApiResponse<OrderPreviewResponse>> preview(
@@ -80,6 +77,16 @@ public class OrderController {
             ) Pageable pageable
     ) {
         return ApiResponse.ok(orderService.getOrderList(memberId, pageable));
+    }
+
+
+    @PostMapping("/{orderId}/cancel")
+    public ApiResponse<Void> cancelOrder(
+            @MemberId Long memberId,
+            @PathVariable Long orderId
+    ) {
+        orderFacade.cancelOrder(memberId, orderId);
+        return ApiResponse.ok();
     }
 
 }

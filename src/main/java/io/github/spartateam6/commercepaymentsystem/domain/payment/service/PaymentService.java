@@ -5,7 +5,6 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
-import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
@@ -14,6 +13,7 @@ import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -63,64 +63,19 @@ public class PaymentService {
         return true;
     }
 
-    @Transactional
-    public void cancelPayment(Long memberId, PaymentCancelRequestDto paymentCancelRequestDto) {
-        Payment payment = getPaymentByOrderNumber(paymentCancelRequestDto.orderNumber());
-        Order order = orderService.getOrderByOrderNumber(paymentCancelRequestDto.orderNumber(), memberId);
-
-        // 내 주문인지?
-        if (!order.getMember().getId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
-        }
-
-        // 이미 주문 취소?
-        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
-            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_REFUND);
-        }
-
-        if (
-                payment.getStatus().equals(PaymentStatus.PENDING) &&
-                order.getStatus().equals(OrderStatus.PAYMENT_PENDING)
-        ) {
-            // Order = 결제대기, Payment = 대기
-            // 결제 전 취소
-
-            // 주문 취소
-            order.updateStatus(OrderStatus.CANCELLED);
-            // 결제 실패
-            payment.changeStatus(PaymentStatus.FAILED);
-            // 재고 복구
-            orderItemService.restoreOrderProductStock(order.getId());
-        }
-
-        if (
-                payment.getStatus().equals(PaymentStatus.PAID) &&
-                order.getStatus().equals(OrderStatus.CONFIRMED)
-        ) {
-            // Order = 주문완료, Payment = 완료
-            // 결제 후 취소 (환불)
-
-            // 주문 취소
-            order.updateStatus(OrderStatus.CANCELLED);
-            // 결제 취소
-            payment.changeStatus(PaymentStatus.REFUND);
-            // 재고 복구
-            orderItemService.restoreOrderProductStock(order.getId());
-
-            // 환불 실행
-            boolean refundSuccess = MockData.refundPortone();
-
-            if (!refundSuccess) { // TODO: 환불 실패 방어로직이 약함. 실 결제 Portone 붙일 때 추후 webhook 으로 처리
-                throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
-            }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void cancelByOrder(String orderNumber, PaymentStatus target) {
+        Payment payment = getPaymentByOrderNumber(orderNumber);
+        payment.changeStatus(target);
+        if (target == PaymentStatus.REFUND && !MockData.refundPortone()) {
+            // TODO: 실 결제 Portone 붙일 때 webhook 으로 처리
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
         }
     }
 
     private Payment getPaymentByOrderNumber(String orderNumber) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+        return paymentRepository.findByOrderNumberWithOrder(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-
-        return payment;
     }
 
     private void validatePayment(

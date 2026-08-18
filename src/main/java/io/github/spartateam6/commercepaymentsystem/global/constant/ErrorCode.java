@@ -40,6 +40,7 @@ public enum ErrorCode {
     ORDER_NUMBER_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_007", "주문번호는 필수입니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_008", "주문을 찾을 수 없습니다."),
     ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
+    ALREADY_ORDER_CANCELED(HttpStatus.CONFLICT, "ORDER_010", "이미 취소된 주문입니다."),
 
 
     // Payment

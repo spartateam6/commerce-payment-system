@@ -11,8 +11,12 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailR
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
+import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.integration.OrderIntegrationService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
+import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
@@ -35,13 +39,34 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderFacade {
 
-    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
-    // TODO : 이거 지워야함
     private final OrderIntegrationService integrationService;
+    private final PaymentService paymentService;
+    private final OrderItemService orderItemService;
     private final MemberService memberService;
     private final CartService cartService;
+
+    @Transactional
+    public void cancelOrder(Long memberId, Long orderId) {
+        Order order = orderService.getOrder(memberId, orderId);
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
+        }
+
+        PaymentStatus targetPaymentStatus = switch (order.getStatus()) {
+            case PAYMENT_PENDING -> PaymentStatus.FAILED;
+            case CONFIRMED       -> PaymentStatus.REFUND;
+            default -> throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
+        };
+
+        order.updateStatus(OrderStatus.CANCELLED);
+        paymentService.cancelByOrder(order.getOrderNumber(), targetPaymentStatus);
+        orderItemService.restoreOrderProductStock(orderId);
+    }
 
 
     @Transactional(readOnly = true)
@@ -132,8 +157,7 @@ public class OrderFacade {
 
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrderDetail(Long memberId, Long orderId) {
-        Member member = memberService.getMember(memberId);
-        Order order = orderService.getOrder(orderId, member);
+        Order order = orderService.getOrder(memberId, orderId);
 
         OrderIntegrationService.PaymentInformation payment =
                 integrationService.getPayment(orderId)
