@@ -51,17 +51,17 @@ class AuthServiceTest {
                 "010-1111-1111"
         );
         // 중복되지 않은 상황 설정
-        given(memberRepository.existsByEmail(request.getEmail()))
+        given(memberRepository.existsByEmail(request.email()))
                 .willReturn(false);
         // 비밀번호 암호화 한 결과 설정
-        given(passwordEncoder.encode(request.getPassword()))
+        given(passwordEncoder.encode(request.password()))
                 .willReturn("encodedPassword");
         //when
         authService.signUp(request);
 
         //then
         //비밀번호 암호화 호출 검증
-        verify(passwordEncoder).encode(request.getPassword());
+        verify(passwordEncoder).encode(request.password());
 
         //Repository에 저장된 Member 객체르 가져오기 위 해 인자 캡처
         ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
@@ -85,7 +85,7 @@ class AuthServiceTest {
                 "010-1111-1111"
         );
         // 이미 존재하는 이메일 설정
-        given(memberRepository.existsByEmail(request.getEmail()))
+        given(memberRepository.existsByEmail(request.email()))
                 .willReturn(true);
 
         //when & then
@@ -112,11 +112,11 @@ class AuthServiceTest {
                 .build();
 
         // 이메일로 회원 조회 설정
-        given(memberRepository.findByEmail(request.getEmail()))
+        given(memberRepository.findByEmail(request.email()))
                 .willReturn(Optional.of(member));
 
         // 비밀번호 일치 상황 설정
-        given(passwordEncoder.matches(request.getPassword(), member.getPassword()))
+        given(passwordEncoder.matches(request.password(), member.getPassword()))
                 .willReturn(true);
 
         // JWT 생성결과 설정
@@ -129,13 +129,13 @@ class AuthServiceTest {
         //then
         // 비밀번호 검증이 호출됐는지 검증
         verify(passwordEncoder)
-                .matches(request.getPassword(), member.getPassword());
+                .matches(request.password(), member.getPassword());
 
         // JWT 생성이 호출됐는지 검증
         verify(jwtProvider).createToken(member.getId());
 
         //발급된 토큰 검증
-        assertThat(response.getAccessToken()).isEqualTo("fake-jwt-token");
+        assertThat(response.accessToken()).isEqualTo("fake-jwt-token");
     }
 
     @Test
@@ -148,17 +148,17 @@ class AuthServiceTest {
 
         Member member = Member.builder()
                 .id(1L)
-                .email(request.getEmail())
+                .email(request.email())
                 .password("encoded-password")
                 .build();
 
         // 이메일로 회원조회시 회원 존재상황 설정
-        given(memberRepository.findByEmail(request.getEmail()))
+        given(memberRepository.findByEmail(request.email()))
                 .willReturn(Optional.of(member));
 
         // 입력한 비밀번호가 저장된 비밀번호와 일치하지 않은 상황 설정
         given(passwordEncoder.matches(
-                request.getPassword(),
+                request.password(),
                 member.getPassword()
         )).willReturn(false);
 
@@ -183,7 +183,7 @@ class AuthServiceTest {
         );
 
         // 이메일로 회원 조회 했는데 회원 없음;;
-        given(memberRepository.findByEmail(request.getEmail()))
+        given(memberRepository.findByEmail(request.email()))
                 .willReturn(Optional.empty());
 
         // when & then

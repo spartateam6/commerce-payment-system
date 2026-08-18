@@ -43,9 +43,9 @@ class MemberServiceTest {
 
         // then
 
-        assertThat(response.getEmail()).isEqualTo("trexs1004@gmail.com");
-        assertThat(response.getName()).isEqualTo("장준혁");
-        assertThat(response.getPhoneNumber()).isEqualTo("010-1111-1111");
+        assertThat(response.email()).isEqualTo("trexs1004@gmail.com");
+        assertThat(response.name()).isEqualTo("장준혁");
+        assertThat(response.phoneNumber()).isEqualTo("010-1111-1111");
     }
 
     @Test
