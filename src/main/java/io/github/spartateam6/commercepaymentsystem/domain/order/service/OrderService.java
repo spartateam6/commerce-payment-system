@@ -6,6 +6,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.repository.Order
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,13 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
-
-    public OrderService(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
-    }
 
     /**
      * Facade의 주문 생성 트랜잭션에 반드시 참여한다.
@@ -45,7 +43,7 @@ public class OrderService {
     /**
      * 주문이 없거나 다른 회원의 주문이면 동일하게 ORDER_NOT_FOUND를 반환한다.
      */
-    @Transactional(readOnly = true, propagation = Propagation.MANDATORY)
+    @Transactional(readOnly = true)
     public Order getOrder(Long orderId, Member member) {
         return orderRepository.findByIdAndMember(orderId, member)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));

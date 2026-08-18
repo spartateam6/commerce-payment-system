@@ -12,6 +12,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderSer
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class OrderFacade {
 
     private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT =
@@ -34,14 +36,6 @@ public class OrderFacade {
 
     private final OrderService orderService;
     private final OrderIntegrationService integrationService;
-
-    public OrderFacade(
-            OrderService orderService,
-            OrderIntegrationService integrationService
-    ) {
-        this.orderService = orderService;
-        this.integrationService = integrationService;
-    }
 
     @Transactional(readOnly = true)
     public OrderPreviewResponse preview(Long memberId, OrderPreviewRequest request) {
