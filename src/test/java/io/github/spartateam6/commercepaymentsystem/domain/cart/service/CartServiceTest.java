@@ -171,4 +171,27 @@ class CartServiceTest {
 
         verify(cartItemRepository, never()).delete(cartItem);
     }
+
+    @Test
+    void clearCart_장바구니가_있으면_모든_항목을_삭제한다() {
+        Cart cart = mock(Cart.class);
+
+        given(cartRepository.findByMember_Id(1L))
+                .willReturn(Optional.of(cart));
+        given(cart.getId()).willReturn(10L);
+
+        cartService.clearCart(1L);
+
+        verify(cartItemRepository).deleteAllByCart_Id(10L);
+    }
+
+    @Test
+    void clearCart_장바구니가_없어도_정상_처리한다() {
+        given(cartRepository.findByMember_Id(1L))
+                .willReturn(Optional.empty());
+
+        cartService.clearCart(1L);
+
+        verify(cartItemRepository, never()).deleteAllByCart_Id(any());
+    }
 }
