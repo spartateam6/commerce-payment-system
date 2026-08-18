@@ -72,4 +72,16 @@ public class Product extends AuditingEntity {
         }
         this.stock += stock;
     }
+
+    public void decreaseStock(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "차감할 재고 수량은 1개 이상이어야 합니다.");
+        }
+
+        if (stock < quantity) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, name + "의 재고가 부족합니다.");
+        }
+
+        stock -= quantity;
+    }
 }
