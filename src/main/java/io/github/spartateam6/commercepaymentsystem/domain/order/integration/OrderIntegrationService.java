@@ -47,23 +47,23 @@ public class OrderIntegrationService {
      * 기존 CartService#getCart를 사용한다. 이 메서드 내부에서 회원 존재와
      * 회원 소유 장바구니가 이미 검증된다.
      */
-    public List<CartItemForOrder> getCartItems(
-            Long memberId,
-            Set<Long> requestedCartItemIds
-    ) {
-        CartResponse cart = cartService.getCart(memberId);
-
-        return cart.items()
-                .stream()
-                .filter(item -> requestedCartItemIds.isEmpty()
-                        || requestedCartItemIds.contains(item.cartItemId()))
-                .map(item -> new CartItemForOrder(
-                        item.cartItemId(),
-                        item.productId(),
-                        item.quantity()
-                ))
-                .toList();
-    }
+//    public List<CartItemForOrder> getCartItems(
+//            Long memberId,
+//            Set<Long> requestedCartItemIds
+//    ) {
+//        CartResponse cart = cartService.getCart(memberId);
+//
+//        return cart.items()
+//                .stream()
+//                .filter(item -> requestedCartItemIds.isEmpty()
+//                        || requestedCartItemIds.contains(item.cartItemId()))
+//                .map(item -> new CartItemForOrder(
+//                        item.cartItemId(),
+//                        item.productId(),
+//                        item.quantity()
+//                ))
+//                .toList();
+//    }
 
     /**
      * 미리보기용 상품 조회. 재고는 변경하지 않는다.
@@ -218,13 +218,13 @@ public class OrderIntegrationService {
                 }
         );
     }
-
-    public record CartItemForOrder(
-            Long cartItemId,
-            Long productId,
-            Integer quantity
-    ) {
-    }
+//
+//    public record CartItemForOrder(
+//            Long cartItemId,
+//            Long productId,
+//            Integer quantity
+//    ) {
+//    }
 
     public record ProductForOrder(
             Product product,
