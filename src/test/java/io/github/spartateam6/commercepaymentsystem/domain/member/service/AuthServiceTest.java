@@ -135,7 +135,7 @@ class AuthServiceTest {
         verify(jwtProvider).createToken(member.getId());
 
         //발급된 토큰 검증
-        assertThat(response.getAccessToken()).isEqualTo("fake-jwt-token");
+        assertThat(response.accessToken()).isEqualTo("fake-jwt-token");
     }
 
     @Test
