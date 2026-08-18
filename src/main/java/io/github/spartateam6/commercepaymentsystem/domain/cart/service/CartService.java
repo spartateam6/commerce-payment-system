@@ -10,6 +10,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartIt
 import io.github.spartateam6.commercepaymentsystem.domain.cart.repository.CartRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductRepository;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
@@ -27,20 +28,16 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
+    private final MemberService memberService;
 
     @Transactional
     public CartItemResponse addItem(
             Long memberId,
             CartItemAddRequest request
     ) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() ->
-                        new BusinessException(
-                                ErrorCode.MEMBER_NOT_FOUND
-                        )
-                );
+        Member member = memberService.getMember(memberId);
+
 
         Product product = productRepository.findById(
                         request.productId()
@@ -142,10 +139,8 @@ public class CartService {
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
 
-        memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.MEMBER_NOT_FOUND
-                ));
+       memberService.getMember(memberId);
+
 
         Optional<Cart> optionalCart =
                 cartRepository.findByMember_Id(memberId);
