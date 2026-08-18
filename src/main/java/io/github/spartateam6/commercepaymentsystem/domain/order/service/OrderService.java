@@ -42,12 +42,9 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    /**
-     * 주문이 없거나 다른 회원의 주문이면 동일하게 ORDER_NOT_FOUND를 반환한다.
-     */
     @Transactional(readOnly = true)
-    public Order getOrder(Long orderId, Member member) {
-        return orderRepository.findByIdAndMember(orderId, member)
+    public Order getOrder(Long memberId, Long orderId) {
+        return orderRepository.findByIdAndMember_Id(orderId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
