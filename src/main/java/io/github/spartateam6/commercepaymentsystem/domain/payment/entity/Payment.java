@@ -1,7 +1,9 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.entity;
 
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,7 +63,7 @@ public class Payment extends AuditingEntity {
 
     public void changeStatus(PaymentStatus newStatus) {
         if (!this.status.canTransitTo(newStatus)) {
-            throw new IllegalArgumentException("Invalid status transition from " + this.status + " to " + newStatus);
+            throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
         this.status = newStatus;
