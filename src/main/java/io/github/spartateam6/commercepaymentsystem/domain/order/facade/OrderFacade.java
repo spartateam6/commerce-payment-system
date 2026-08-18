@@ -13,7 +13,9 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreview
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.integration.OrderIntegrationService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
+import io.github.spartateam6.commercepaymentsystem.domain.product.service.ProductService;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class OrderFacade {
     private final OrderIntegrationService integrationService;
     private final MemberService memberService;
     private final CartService cartService;
+    private final ProductService productService;
 
 
     @Transactional(readOnly = true)
@@ -57,7 +60,7 @@ public class OrderFacade {
 
         PreparedOrder preparedOrder = prepareOrder(
                 cartItems,
-                integrationService.getProducts(productIds)
+                productService.getProductsForOrder(productIds)
         );
 
         List<OrderPreviewResponse.PreviewItem> items = preparedOrder.items()
@@ -75,9 +78,7 @@ public class OrderFacade {
         return new OrderPreviewResponse(items, preparedOrder.totalAmount());
     }
 
-    /**
-     * 주문 생성의 유일한 public 트랜잭션 진입점이다.
-     */
+
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
         Member member = memberService.getMember(memberId);
@@ -97,11 +98,7 @@ public class OrderFacade {
                         LinkedHashMap::new
                 ));
 
-        Map<Long, OrderIntegrationService.ProductForOrder> reservedProducts =
-                integrationService.validateAndDecreaseStocks(quantities);
-
-        /* 롤백 검증 시 아래 한 줄의 주석을 잠시 해제한다. */
-        // throw new RuntimeException("재고 차감 후 강제 롤백");
+        Map<Long, ProductForOrderResponse> reservedProducts = productService.validateAndDecreaseStocks(quantities);
 
         PreparedOrder preparedOrder = prepareOrder(cartItems, reservedProducts);
 
@@ -166,15 +163,9 @@ public class OrderFacade {
             );
         }
 
-        /*
-         * 이 부분에서만 CartResponse를 사용한다.
-         */
         CartResponse cart = cartService.getCart(memberId);
 
-        /*
-         * CartResponse 안의 items를 꺼내서
-         * 주문에서 필요한 CartItemForOrder 목록으로 변환한다.
-         */
+        // CartResponse 안의 items를 꺼내서 주문에서 필요한 CartItemForOrder 목록으로 변환
         List<CartItemForOrderResponse> selectedCartItems =
                 cart.items()
                         .stream()
@@ -220,7 +211,7 @@ public class OrderFacade {
 
     private PreparedOrder prepareOrder(
             List<CartItemForOrderResponse> cartItems,
-            Map<Long, OrderIntegrationService.ProductForOrder> productMap
+            Map<Long, ProductForOrderResponse> productMap
     ) {
         Set<Long> requestedProductIds = cartItems.stream()
                 .map(CartItemForOrderResponse::productId)
@@ -234,7 +225,7 @@ public class OrderFacade {
         int totalAmount = 0;
 
         for (CartItemForOrderResponse cartItem : cartItems) {
-            OrderIntegrationService.ProductForOrder product =
+            ProductForOrderResponse product =
                     productMap.get(cartItem.productId());
 
             if (product.stock() < cartItem.quantity()) {

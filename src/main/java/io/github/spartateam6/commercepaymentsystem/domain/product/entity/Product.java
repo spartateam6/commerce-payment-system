@@ -1,6 +1,8 @@
 package io.github.spartateam6.commercepaymentsystem.domain.product.entity;
 
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,5 +61,17 @@ public class Product extends AuditingEntity {
             throw new IllegalArgumentException("재고 수량은 0 이상이어야 합니다.");
         }
         this.stock += stock;
+    }
+
+    public void decreaseStock(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "차감할 재고 수량은 1개 이상이어야 합니다.");
+        }
+
+        if (stock < quantity) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, name + "의 재고가 부족합니다.");
+        }
+
+        stock -= quantity;
     }
 }
