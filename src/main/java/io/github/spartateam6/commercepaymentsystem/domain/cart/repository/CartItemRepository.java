@@ -3,12 +3,9 @@ package io.github.spartateam6.commercepaymentsystem.domain.cart.repository;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.CartItem;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface CartItemRepository
         extends JpaRepository<CartItem, Long> {
@@ -23,6 +20,7 @@ public interface CartItemRepository
             Long memberId
     );
 
+    @EntityGraph(attributePaths = "product")
     List<CartItem> findAllByCart_Id(
             Long cartId
     );
