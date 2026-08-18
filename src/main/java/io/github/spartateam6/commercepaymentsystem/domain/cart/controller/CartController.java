@@ -65,6 +65,15 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> clearCart(
+            @MemberId Long memberId
+    ) {
+        cartService.clearCart(memberId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<CartResponse>> getCart(
             @MemberId Long memberId

@@ -1,6 +1,5 @@
-# 이 워크플로우가 언제 실행될지 정한다.
-# dev/main 으로 향하는 PR이 열리거나 , dev/main에 직접 push될 때 실행된다.
-# PR시점에 실행되야 머지하기 전에 막는다
+name: CI
+
 on:
   pull_request:
     branches: [ dev,main ]
@@ -17,6 +16,7 @@ on:
 
 jobs:
   build:
+    name: Build & Test
     # github가 제공하는 우분트 가상머신에서 실행
     runs-on: ubuntu-latest
 

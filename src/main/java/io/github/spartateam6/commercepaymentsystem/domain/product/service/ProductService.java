@@ -165,4 +165,33 @@ public class ProductService {
 
         return Collections.unmodifiableMap(result);
     }
+      
+    @Transactional
+    public void deductStock(Long productId, int quantity) {
+        validateQuantity(quantity);
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        int updateedRows = productRepository.decreaseStock(productId, quantity);
+        if (updateedRows == 0) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
+        }
+    }
+
+    @Transactional
+    public void increaseStock(Long productId, int quantity) {
+        validateQuantity(quantity);
+
+        productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        productRepository.increaseStock(productId, quantity);
+    }
+
+    private void validateQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "수량은 1 이상이어야 합니다.");
+        }
+    }
 }
