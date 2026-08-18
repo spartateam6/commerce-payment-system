@@ -6,9 +6,14 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailR
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.facade.OrderFacade;
+import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
 import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,15 +23,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderFacade orderFacade;
+    private final OrderService orderService;
 
-    public OrderController(OrderFacade orderFacade) {
+    public OrderController(OrderFacade orderFacade, OrderService orderService) {
         this.orderFacade = orderFacade;
+        this.orderService = orderService;
     }
 
     @PostMapping("/preview")
@@ -60,4 +68,18 @@ public class OrderController {
                 ApiResponse.ok(orderFacade.getOrderDetail(memberId, orderId))
         );
     }
+
+    @GetMapping
+    public ApiResponse<List<OrderDetailResponse>> getOrderList(
+            @MemberId Long memberId,
+            @Parameter(hidden = true) @PageableDefault(
+                    page = 0,
+                    size = 20,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable
+    ) {
+        return ApiResponse.ok(orderService.getOrderList(memberId, pageable));
+    }
+
 }
