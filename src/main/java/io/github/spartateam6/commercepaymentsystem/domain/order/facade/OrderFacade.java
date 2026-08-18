@@ -11,7 +11,6 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreview
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
-import io.github.spartateam6.commercepaymentsystem.domain.order.integration.OrderIntegrationService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
