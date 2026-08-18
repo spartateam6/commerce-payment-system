@@ -1,9 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.member.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+
 
 
 public record SignUpRequest(
