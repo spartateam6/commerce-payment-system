@@ -1,12 +1,14 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.repository.OrderRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +55,14 @@ public class OrderService {
     public Order getOrderByOrderNumber(String orderNumber, Long memberId) {
         return orderRepository.findByOrderNumberAndMember_Id(orderNumber, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderDetailResponse> getOrderList(Long memberId, Pageable pageable) {
+        List<Order> orderList = orderRepository.findAllByMember_Id(memberId, pageable);
+        return orderList.stream()
+                .map(o -> OrderDetailResponse.from(o, null))
+                .toList();
     }
 
     public record CreateOrderItem(
