@@ -42,14 +42,6 @@ public class OrderIntegrationService {
     private final Map<Long, PaymentInformation> mockPayments = new ConcurrentHashMap<>();
     private final AtomicLong paymentSequence = new AtomicLong(1L);
 
-    /**
-     * MemberService에는 엔티티를 반환하는 메서드가 아직 없으므로,
-     * 기존 MemberRepository 조회 기능으로 실제 영속 엔티티를 가져온다.
-     */
-    public Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
     /**
      * 기존 CartService#getCart를 사용한다. 이 메서드 내부에서 회원 존재와

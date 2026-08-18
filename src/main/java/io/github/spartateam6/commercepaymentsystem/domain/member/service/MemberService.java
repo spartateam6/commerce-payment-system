@@ -7,6 +7,7 @@ import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,5 +19,12 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         return MemberResponse.from(member);
+    }
+
+    // orderFacade에서 사용하는 메서드입니다.
+    @Transactional(readOnly = true)
+    public Member getMember(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 }
