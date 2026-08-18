@@ -47,10 +47,9 @@ public class PaymentService {
 
         // TODO: 결제 요청 로직 (Portone)
         // ...
-        boolean paymentSuccess = MockData.processPortone();
 
         // 결제 실패
-        if (!paymentSuccess) {
+        if (paymentRequestDto.result() == PaymentRequestDto.PaymentResult.FAIL) {
             payment.changeStatus(PaymentStatus.FAILED);
             // 차감한 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());

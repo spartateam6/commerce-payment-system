@@ -10,6 +10,11 @@ public record PaymentRequestDto(
 
         @NotNull
         @Min(1)
-        Integer price
+        Integer price,
+
+        @NotNull PaymentResult result
+
 ) {
+
+        public enum PaymentResult{ SUCCESS, FAIL }
 }
