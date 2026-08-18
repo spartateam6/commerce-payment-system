@@ -18,7 +18,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -71,4 +70,12 @@ public class Payment extends AuditingEntity {
         }
     }
 
+    public static Payment createPending(Order order, Integer amount) {
+        Payment payment = new Payment();
+        payment.order = order;
+        payment.amount = amount;
+        payment.status = PaymentStatus.PENDING;
+        payment.completedAt = null;
+        return payment;
+    }
 }
