@@ -1,5 +1,4 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.facade;
-
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.service.CartService;
@@ -16,6 +15,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.integration.Orde
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
@@ -25,7 +25,6 @@ import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessExce
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -45,12 +44,11 @@ public class OrderFacade {
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
-    private final OrderIntegrationService integrationService;
-    private final PaymentService paymentService;
     private final OrderItemService orderItemService;
     private final MemberService memberService;
     private final CartService cartService;
     private final ProductService productService;
+    private final PaymentService paymentService;
 
     @Transactional
     public void cancelOrder(Long memberId, Long orderId) {
@@ -74,33 +72,36 @@ public class OrderFacade {
 
     @Transactional(readOnly = true)
     public OrderPreviewResponse preview(Long memberId, OrderPreviewRequest request) {
-        memberService.getMember(memberId);
 
-        List<CartItemForOrderResponse> cartItems =
-                getOwnedCartItems(memberId, request.cartItemIds());
+        List<CartItemForOrderResponse> cartItems = getOwnedCartItems(memberId, request.cartItemIds());
 
+        // 장바구니 상품에서 상품 ID만 추출한
         Set<Long> productIds = cartItems.stream()
                 .map(CartItemForOrderResponse::productId)
                 .collect(Collectors.toSet());
 
-        PreparedOrder preparedOrder = prepareOrder(
-                cartItems,
-                productService.getProductsForOrder(productIds)
-        );
+        // 미리보기이므로 재고를 차감하지 않는다.
+        Map<Long, ProductForOrderResponse> products = productService.getProductsForOrder(productIds);
 
-        List<OrderPreviewResponse.PreviewItem> items = preparedOrder.items()
-                .stream()
-                .map(item -> new OrderPreviewResponse.PreviewItem(
-                        item.cartItemId(),
-                        item.product().getId(),
-                        item.productName(),
-                        item.unitPrice(),
-                        item.quantity(),
-                        item.lineAmount()
-                ))
-                .toList();
+         // 현재 상품명·가격·재고를 기준으로 주문 예정 상품과 총액을 계산
+        PreparedOrder preparedOrder = prepareOrder(cartItems, products);
 
-        return new OrderPreviewResponse(items, preparedOrder.totalAmount());
+        List<OrderPreviewResponse.PreviewItem> previewItems =
+                preparedOrder.items()
+                        .stream()
+                        .map(item ->
+                                new OrderPreviewResponse.PreviewItem(
+                                        item.cartItemId(),
+                                        item.product().getId(),
+                                        item.productName(),
+                                        item.unitPrice(),
+                                        item.quantity(),
+                                        item.lineAmount()
+                                )
+                        )
+                        .toList();
+
+        return new OrderPreviewResponse(previewItems, preparedOrder.totalAmount());
     }
 
 
@@ -137,18 +138,11 @@ public class OrderFacade {
                 ))
                 .toList();
 
-        Order savedOrder = orderService.createOrder(
-                member,
-                generateOrderNumber(),
-                createItems
-        );
+        Order savedOrder = orderService.createOrder(member, generateOrderNumber(), createItems);
 
-        integrationService.createWaitingPayment(
-                savedOrder,
-                savedOrder.getTotalAmount()
-        );
+        paymentService.createPendingPayment(savedOrder, savedOrder.getTotalAmount());
 
-        /* 결제 완료 전이므로 장바구니는 비우지 않는다. */
+        // 결제 완료 전이므로 장바구니는 비우지 않는다.
         return OrderCreateResponse.from(savedOrder);
     }
 
@@ -156,8 +150,8 @@ public class OrderFacade {
     public OrderDetailResponse getOrderDetail(Long memberId, Long orderId) {
         Order order = orderService.getOrder(memberId, orderId);
 
-        OrderIntegrationService.PaymentInformation payment =
-                integrationService.getPayment(orderId)
+        PaymentForOrderResponse payment =
+                paymentService.findByOrderId(orderId)
                         .orElseThrow(() -> new BusinessException(
                                 ErrorCode.ORDER_PAYMENT_INFORMATION_UNAVAILABLE
                         ));
@@ -174,17 +168,15 @@ public class OrderFacade {
         return OrderDetailResponse.from(order, paymentResponse);
     }
 
+
     private List<CartItemForOrderResponse> getOwnedCartItems(
             Long memberId,
             List<Long> requestedIds
     ) {
-        Set<Long> requestedCartItemIds =
-                new LinkedHashSet<>(requestedIds);
+        Set<Long> requestedCartItemIds = new LinkedHashSet<>(requestedIds);
 
         if (requestedCartItemIds.size() != requestedIds.size()) {
-            throw new BusinessException(
-                    ErrorCode.DUPLICATE_ORDER_ITEM_SELECTION
-            );
+            throw new BusinessException(ErrorCode.DUPLICATE_ORDER_ITEM_SELECTION);
         }
 
         CartResponse cart = cartService.getCart(memberId);
@@ -208,14 +200,9 @@ public class OrderFacade {
 
         if (selectedCartItems.isEmpty()) {
             if (requestedCartItemIds.isEmpty()) {
-                throw new BusinessException(
-                        ErrorCode.ORDER_ITEMS_EMPTY
-                );
+                throw new BusinessException(ErrorCode.ORDER_ITEMS_EMPTY);
             }
-
-            throw new BusinessException(
-                    ErrorCode.INVALID_ORDER_ITEM_SELECTION
-            );
+            throw new BusinessException(ErrorCode.INVALID_ORDER_ITEM_SELECTION);
         }
 
         if (!requestedCartItemIds.isEmpty()) {
@@ -224,14 +211,13 @@ public class OrderFacade {
                     .collect(Collectors.toSet());
 
             if (!foundIds.equals(requestedCartItemIds)) {
-                throw new BusinessException(
-                        ErrorCode.INVALID_ORDER_ITEM_SELECTION
-                );
+                throw new BusinessException(ErrorCode.INVALID_ORDER_ITEM_SELECTION);
             }
         }
 
         return selectedCartItems;
     }
+
 
     private PreparedOrder prepareOrder(
             List<CartItemForOrderResponse> cartItems,
@@ -249,8 +235,7 @@ public class OrderFacade {
         int totalAmount = 0;
 
         for (CartItemForOrderResponse cartItem : cartItems) {
-            ProductForOrderResponse product =
-                    productMap.get(cartItem.productId());
+            ProductForOrderResponse product = productMap.get(cartItem.productId());
 
             if (product.stock() < cartItem.quantity()) {
                 throw new BusinessException(
@@ -275,6 +260,7 @@ public class OrderFacade {
 
         return new PreparedOrder(List.copyOf(items), totalAmount);
     }
+
 
     private String generateOrderNumber() {
         String dateTime = LocalDateTime.now().format(ORDER_NUMBER_DATE_FORMAT);
