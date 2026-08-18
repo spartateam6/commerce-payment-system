@@ -1,6 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.facade;
 
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderCreateRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderCreateResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailResponse;
@@ -35,11 +36,14 @@ public class OrderFacade {
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
+    // TODO : 이거 지워야함
     private final OrderIntegrationService integrationService;
+    private final MemberService memberService;
+
 
     @Transactional(readOnly = true)
     public OrderPreviewResponse preview(Long memberId, OrderPreviewRequest request) {
-        integrationService.getMember(memberId);
+        memberService.getMember(memberId);
 
         List<OrderIntegrationService.CartItemForOrder> cartItems =
                 getOwnedCartItems(memberId, request.cartItemIds());
@@ -73,7 +77,7 @@ public class OrderFacade {
      */
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        Member member = integrationService.getMember(memberId);
+        Member member = memberService.getMember(memberId);
 
         List<OrderIntegrationService.CartItemForOrder> cartItems =
                 getOwnedCartItems(memberId, request.cartItemIds());
@@ -125,7 +129,7 @@ public class OrderFacade {
 
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrderDetail(Long memberId, Long orderId) {
-        Member member = integrationService.getMember(memberId);
+        Member member = memberService.getMember(memberId);
         Order order = orderService.getOrder(orderId, member);
 
         OrderIntegrationService.PaymentInformation payment =
