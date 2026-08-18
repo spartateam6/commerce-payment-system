@@ -40,6 +40,7 @@ public enum ErrorCode {
     ORDER_NUMBER_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER_007", "주문번호는 필수입니다."),
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_008", "주문을 찾을 수 없습니다."),
     ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
+    ALREADY_ORDER_CANCELED(HttpStatus.CONFLICT, "ORDER_010", "이미 취소된 주문입니다."),
 
 
     // Payment
@@ -50,6 +51,7 @@ public enum ErrorCode {
     ALREADY_PROCESSED_PAYMENT(HttpStatus.CONFLICT, "PAYMENT_005", "이미 처리된 결제입니다."),
     PAYMENT_NOT_MATCH_ORDER(HttpStatus.BAD_REQUEST, "PAYMENT_006", "결제 정보가 주문과 일치하지 않습니다."),
     ALREADY_PROCESSED_REFUND(HttpStatus.CONFLICT, "PAYMENT_007", "이미 처리된 환불(취소)요청입니다."),
+    PAYMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "PAYMENT_008", "해당 주문의 결제 정보가 이미 존재합니다."),
 
     // Webhook
     INVALID_WEBHOOK_SIGNATURE(HttpStatus.UNAUTHORIZED, "WEBHOOK_001", "웹훅 서명이 유효하지 않습니다."),

@@ -1,6 +1,5 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.controller;
 
-import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -37,15 +37,6 @@ public class PaymentController {
         }
 
         return ApiResponse.ok(new PaymentResponse("ok"));
-    }
-
-    @PostMapping("/cancel")
-    public ApiResponse<Void> cancelPayment(
-            @Valid @RequestBody PaymentCancelRequestDto paymentCancelRequestDto,
-            @MemberId Long memberId
-    ) {
-        paymentService.cancelPayment(memberId, paymentCancelRequestDto);
-        return ApiResponse.ok();
     }
 
 }
