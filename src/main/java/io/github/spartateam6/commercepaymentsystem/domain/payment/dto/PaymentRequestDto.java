@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotNull;
 
 public record PaymentRequestDto(
         @NotBlank
-        String orderNumber
+        String orderNumber,
+
+        @NotBlank
+        @Min(1)
+        Integer price
 ) {
 }

@@ -35,7 +35,11 @@ public class PaymentService {
         Payment payment = getPaymentByOrderNumber(paymentRequestDto.orderNumber());
         Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
-        validatePayment(memberId, payment, order);
+        // 결제 금액 검증
+        // 프론트에서 넘어온 가격 == DB 가격 ?
+        if (!payment.getAmount().equals(paymentRequestDto.price())) {
+            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        }
 
         // 주문 상태 검증
         if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
@@ -80,23 +84,6 @@ public class PaymentService {
     private Payment getPaymentByOrderNumber(String orderNumber) {
         return paymentRepository.findByOrderNumberWithOrder(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-    }
-
-    private void validatePayment(
-            Long memberId,
-            Payment payment,
-            Order order
-    ) {
-        // 주문자와 결제 정보 일치하는지?
-        if (!order.getMember().getId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
-        }
-
-        // 결제 금액 검증
-        // Order DB 값 == 결제할 가격 ?
-        if (!payment.getAmount().equals(order.getTotalAmount())) {
-            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
-        }
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

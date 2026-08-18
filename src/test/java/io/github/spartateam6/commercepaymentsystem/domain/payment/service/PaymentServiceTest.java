@@ -71,7 +71,7 @@ class PaymentServiceTest {
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
         void requestPayment_결제정보없음_예외발생() {
             // given
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
@@ -81,20 +81,20 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제자와 주문자가 다르면 PAYMENT_NOT_MATCH_ORDER 예외가 발생한다")
+        @DisplayName("다른 회원의 주문이면 ORDER_NOT_FOUND 예외가 발생한다")
         void requestPayment_소유권불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment();
-            Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
-            given(orderService.getOrderByOrderNumber(ORDER_NUMBER, 2L)).willReturn(order);
+            given(orderService.getOrderByOrderNumber(ORDER_NUMBER, 2L))
+                    .willThrow(new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
                     () -> paymentService.requestPayment(2L, dto));
-            assertEquals(ErrorCode.PAYMENT_NOT_MATCH_ORDER, ex.getErrorCode());
+            assertEquals(ErrorCode.ORDER_NOT_FOUND, ex.getErrorCode());
         }
 
         @Test
@@ -102,8 +102,8 @@ class PaymentServiceTest {
         void requestPayment_금액불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment(); // amount = 30000
-            Order order = createOrder(OrderStatus.PAYMENT_PENDING, 99999); // totalAmount 불일치
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER);
+            Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 99999); // dto.price != payment.amount
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
@@ -120,7 +120,7 @@ class PaymentServiceTest {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
             Order order = createOrder(OrderStatus.CONFIRMED, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
@@ -137,7 +137,7 @@ class PaymentServiceTest {
             // given
             Payment payment = PaymentFixture.createPayment(); // PENDING, amount=30000
             Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
