@@ -6,6 +6,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStat
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentCancelRequestDto;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
@@ -14,7 +15,11 @@ import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -139,6 +144,27 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
     }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void createPendingPayment(Order order, Integer amount) {
+        if (paymentRepository.existsByOrder_Id(order.getId())) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_EXISTS);
+        }
+
+        if (order.getTotalAmount().compareTo(amount) != 0) {
+            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        }
+
+        Payment payment = Payment.createPending(order, amount);
+        paymentRepository.save(payment);
+    }
+
+
+    @Transactional(readOnly = true, propagation = Propagation.MANDATORY)
+    public Optional<PaymentForOrderResponse> findByOrderId(Long orderId) {
+        return paymentRepository.findByOrder_Id(orderId).map(PaymentForOrderResponse::from);
+    }
+
 
     // TODO: replace Mock data to real data
     static class MockData {

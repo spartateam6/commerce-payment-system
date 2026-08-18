@@ -1,5 +1,4 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.facade;
-
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.cart.service.CartService;
@@ -11,8 +10,9 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailR
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
-import io.github.spartateam6.commercepaymentsystem.domain.order.integration.OrderIntegrationService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.domain.product.service.ProductService;
@@ -21,7 +21,6 @@ import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessExce
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,11 +39,10 @@ public class OrderFacade {
     private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
-    // TODO : 이거 지워야함
-    private final OrderIntegrationService integrationService;
     private final MemberService memberService;
     private final CartService cartService;
     private final ProductService productService;
+    private final PaymentService paymentService;
 
 
     @Transactional(readOnly = true)
@@ -112,16 +110,9 @@ public class OrderFacade {
                 ))
                 .toList();
 
-        Order savedOrder = orderService.createOrder(
-                member,
-                generateOrderNumber(),
-                createItems
-        );
+        Order savedOrder = orderService.createOrder(member, generateOrderNumber(), createItems);
 
-        integrationService.createWaitingPayment(
-                savedOrder,
-                savedOrder.getTotalAmount()
-        );
+        paymentService.createPendingPayment(savedOrder, savedOrder.getTotalAmount());
 
         /* 결제 완료 전이므로 장바구니는 비우지 않는다. */
         return OrderCreateResponse.from(savedOrder);
@@ -132,8 +123,8 @@ public class OrderFacade {
         Member member = memberService.getMember(memberId);
         Order order = orderService.getOrder(orderId, member);
 
-        OrderIntegrationService.PaymentInformation payment =
-                integrationService.getPayment(orderId)
+        PaymentForOrderResponse payment =
+                paymentService.findByOrderId(orderId)
                         .orElseThrow(() -> new BusinessException(
                                 ErrorCode.ORDER_PAYMENT_INFORMATION_UNAVAILABLE
                         ));
