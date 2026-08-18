@@ -73,7 +73,10 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        product.deductStock(quantity);
+        int updateedRows = productRepository.decreaseStock(productId, quantity);
+        if (updateedRows == 0) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
+        }
     }
 
     @Transactional
@@ -83,7 +86,7 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        product.increaseStock(quantity);
+        product.setStock(product.getStock() + quantity);
     }
 
     private void validateQuantity(int quantity) {
