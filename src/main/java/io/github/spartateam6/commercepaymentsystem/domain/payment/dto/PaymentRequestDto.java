@@ -8,7 +8,7 @@ public record PaymentRequestDto(
         @NotBlank
         String orderNumber,
 
-        @NotBlank
+        @NotNull
         @Min(1)
         Integer price
 ) {
