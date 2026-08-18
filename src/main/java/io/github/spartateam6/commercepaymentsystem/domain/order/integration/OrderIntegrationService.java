@@ -42,36 +42,28 @@ public class OrderIntegrationService {
     private final Map<Long, PaymentInformation> mockPayments = new ConcurrentHashMap<>();
     private final AtomicLong paymentSequence = new AtomicLong(1L);
 
-    /**
-     * MemberService에는 엔티티를 반환하는 메서드가 아직 없으므로,
-     * 기존 MemberRepository 조회 기능으로 실제 영속 엔티티를 가져온다.
-     */
-    public Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-    }
 
     /**
      * 기존 CartService#getCart를 사용한다. 이 메서드 내부에서 회원 존재와
      * 회원 소유 장바구니가 이미 검증된다.
      */
-    public List<CartItemForOrder> getCartItems(
-            Long memberId,
-            Set<Long> requestedCartItemIds
-    ) {
-        CartResponse cart = cartService.getCart(memberId);
-
-        return cart.items()
-                .stream()
-                .filter(item -> requestedCartItemIds.isEmpty()
-                        || requestedCartItemIds.contains(item.cartItemId()))
-                .map(item -> new CartItemForOrder(
-                        item.cartItemId(),
-                        item.productId(),
-                        item.quantity()
-                ))
-                .toList();
-    }
+//    public List<CartItemForOrder> getCartItems(
+//            Long memberId,
+//            Set<Long> requestedCartItemIds
+//    ) {
+//        CartResponse cart = cartService.getCart(memberId);
+//
+//        return cart.items()
+//                .stream()
+//                .filter(item -> requestedCartItemIds.isEmpty()
+//                        || requestedCartItemIds.contains(item.cartItemId()))
+//                .map(item -> new CartItemForOrder(
+//                        item.cartItemId(),
+//                        item.productId(),
+//                        item.quantity()
+//                ))
+//                .toList();
+//    }
 
     /**
      * 미리보기용 상품 조회. 재고는 변경하지 않는다.
@@ -226,13 +218,13 @@ public class OrderIntegrationService {
                 }
         );
     }
-
-    public record CartItemForOrder(
-            Long cartItemId,
-            Long productId,
-            Integer quantity
-    ) {
-    }
+//
+//    public record CartItemForOrder(
+//            Long cartItemId,
+//            Long productId,
+//            Integer quantity
+//    ) {
+//    }
 
     public record ProductForOrder(
             Product product,

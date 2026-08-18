@@ -1,6 +1,10 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.facade;
 
+import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartItemForOrderResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.cart.dto.response.CartResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.cart.service.CartService;
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderCreateRequest;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderCreateResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderDetailResponse;
@@ -31,21 +35,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderFacade {
 
-    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderService orderService;
+    // TODO : 이거 지워야함
     private final OrderIntegrationService integrationService;
+    private final MemberService memberService;
+    private final CartService cartService;
+
 
     @Transactional(readOnly = true)
     public OrderPreviewResponse preview(Long memberId, OrderPreviewRequest request) {
-        integrationService.getMember(memberId);
+        memberService.getMember(memberId);
 
-        List<OrderIntegrationService.CartItemForOrder> cartItems =
+        List<CartItemForOrderResponse> cartItems =
                 getOwnedCartItems(memberId, request.cartItemIds());
 
         Set<Long> productIds = cartItems.stream()
-                .map(OrderIntegrationService.CartItemForOrder::productId)
+                .map(CartItemForOrderResponse::productId)
                 .collect(Collectors.toSet());
 
         PreparedOrder preparedOrder = prepareOrder(
@@ -73,15 +80,15 @@ public class OrderFacade {
      */
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        Member member = integrationService.getMember(memberId);
+        Member member = memberService.getMember(memberId);
 
-        List<OrderIntegrationService.CartItemForOrder> cartItems =
+        List<CartItemForOrderResponse> cartItems =
                 getOwnedCartItems(memberId, request.cartItemIds());
 
         Map<Long, Integer> quantities = cartItems.stream()
                 .collect(Collectors.toMap(
-                        OrderIntegrationService.CartItemForOrder::productId,
-                        OrderIntegrationService.CartItemForOrder::quantity,
+                        CartItemForOrderResponse::productId,
+                        CartItemForOrderResponse::quantity,
                         (first, second) -> {
                             throw new BusinessException(
                                     ErrorCode.DUPLICATE_ORDER_ITEM_SELECTION
@@ -125,7 +132,7 @@ public class OrderFacade {
 
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrderDetail(Long memberId, Long orderId) {
-        Member member = integrationService.getMember(memberId);
+        Member member = memberService.getMember(memberId);
         Order order = orderService.getOrder(orderId, member);
 
         OrderIntegrationService.PaymentInformation payment =
@@ -146,45 +153,77 @@ public class OrderFacade {
         return OrderDetailResponse.from(order, paymentResponse);
     }
 
-    private List<OrderIntegrationService.CartItemForOrder> getOwnedCartItems(
+    private List<CartItemForOrderResponse> getOwnedCartItems(
             Long memberId,
             List<Long> requestedIds
     ) {
-        Set<Long> requestedCartItemIds = new LinkedHashSet<>(requestedIds);
+        Set<Long> requestedCartItemIds =
+                new LinkedHashSet<>(requestedIds);
 
         if (requestedCartItemIds.size() != requestedIds.size()) {
-            throw new BusinessException(ErrorCode.DUPLICATE_ORDER_ITEM_SELECTION);
+            throw new BusinessException(
+                    ErrorCode.DUPLICATE_ORDER_ITEM_SELECTION
+            );
         }
 
-        List<OrderIntegrationService.CartItemForOrder> cartItems =
-                integrationService.getCartItems(memberId, requestedCartItemIds);
+        /*
+         * 이 부분에서만 CartResponse를 사용한다.
+         */
+        CartResponse cart = cartService.getCart(memberId);
 
-        if (cartItems.isEmpty()) {
+        /*
+         * CartResponse 안의 items를 꺼내서
+         * 주문에서 필요한 CartItemForOrder 목록으로 변환한다.
+         */
+        List<CartItemForOrderResponse> selectedCartItems =
+                cart.items()
+                        .stream()
+                        .filter(item ->
+                                requestedCartItemIds.isEmpty()
+                                        || requestedCartItemIds.contains(
+                                        item.cartItemId()
+                                )
+                        )
+                        .map(item -> new CartItemForOrderResponse(
+                                item.cartItemId(),
+                                item.productId(),
+                                item.quantity()
+                        ))
+                        .toList();
+
+        if (selectedCartItems.isEmpty()) {
             if (requestedCartItemIds.isEmpty()) {
-                throw new BusinessException(ErrorCode.ORDER_ITEMS_EMPTY);
+                throw new BusinessException(
+                        ErrorCode.ORDER_ITEMS_EMPTY
+                );
             }
-            throw new BusinessException(ErrorCode.INVALID_ORDER_ITEM_SELECTION);
+
+            throw new BusinessException(
+                    ErrorCode.INVALID_ORDER_ITEM_SELECTION
+            );
         }
 
         if (!requestedCartItemIds.isEmpty()) {
-            Set<Long> foundIds = cartItems.stream()
-                    .map(OrderIntegrationService.CartItemForOrder::cartItemId)
+            Set<Long> foundIds = selectedCartItems.stream()
+                    .map(CartItemForOrderResponse::cartItemId)
                     .collect(Collectors.toSet());
 
             if (!foundIds.equals(requestedCartItemIds)) {
-                throw new BusinessException(ErrorCode.INVALID_ORDER_ITEM_SELECTION);
+                throw new BusinessException(
+                        ErrorCode.INVALID_ORDER_ITEM_SELECTION
+                );
             }
         }
 
-        return cartItems;
+        return selectedCartItems;
     }
 
     private PreparedOrder prepareOrder(
-            List<OrderIntegrationService.CartItemForOrder> cartItems,
+            List<CartItemForOrderResponse> cartItems,
             Map<Long, OrderIntegrationService.ProductForOrder> productMap
     ) {
         Set<Long> requestedProductIds = cartItems.stream()
-                .map(OrderIntegrationService.CartItemForOrder::productId)
+                .map(CartItemForOrderResponse::productId)
                 .collect(Collectors.toSet());
 
         if (!productMap.keySet().equals(requestedProductIds)) {
@@ -194,7 +233,7 @@ public class OrderFacade {
         List<PreparedItem> items = new ArrayList<>();
         int totalAmount = 0;
 
-        for (OrderIntegrationService.CartItemForOrder cartItem : cartItems) {
+        for (CartItemForOrderResponse cartItem : cartItems) {
             OrderIntegrationService.ProductForOrder product =
                     productMap.get(cartItem.productId());
 

@@ -29,4 +29,13 @@ class CartControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(response.getBody()).isNull();
     }
+
+    @Test
+    void clearCart_성공하면_본문없이_204를_반환한다() {
+        ResponseEntity<Void> response = cartController.clearCart(1L);
+
+        verify(cartService).clearCart(1L);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(response.getBody()).isNull();
+    }
 }
