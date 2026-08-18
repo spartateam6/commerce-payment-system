@@ -44,14 +44,23 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Order getOrder(Long memberId, Long orderId) {
-        return orderRepository.findByIdAndMember_Id(orderId, memberId)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        if (!order.getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+        return order;
     }
 
     @Transactional(readOnly = true)
     public Order getOrderByOrderNumber(String orderNumber, Long memberId) {
-        return orderRepository.findByOrderNumberAndMember_Id(orderNumber, memberId)
+
+        Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        if (!order.getMember().getId().equals(memberId)){
+            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
+        }
+        return order;
     }
 
     @Transactional(readOnly = true)
