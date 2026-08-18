@@ -189,6 +189,12 @@ public class ProductService {
         productRepository.increaseStock(productId, quantity);
     }
 
+    @Transactional(readOnly = true)
+    public Product getProductEntity(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
     private void validateQuantity(int quantity) {
         if (quantity <= 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "수량은 1 이상이어야 합니다.");

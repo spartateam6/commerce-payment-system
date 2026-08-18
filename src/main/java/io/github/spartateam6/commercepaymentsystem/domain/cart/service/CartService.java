@@ -13,6 +13,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.member.repository.Memb
 import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.product.service.ProductService;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,8 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final ProductRepository productRepository;
     private final MemberService memberService;
+    private final ProductService productService;
 
     @Transactional
     public CartItemResponse addItem(
@@ -38,15 +39,7 @@ public class CartService {
     ) {
         Member member = memberService.getMember(memberId);
 
-
-        Product product = productRepository.findById(
-                        request.productId()
-                )
-                .orElseThrow(() ->
-                        new BusinessException(
-                                ErrorCode.PRODUCT_NOT_FOUND
-                        )
-                );
+        Product product = productService.getProductEntity(request.productId());
 
         Cart cart = cartRepository.findByMember_Id(memberId)
                 .orElseGet(() ->
