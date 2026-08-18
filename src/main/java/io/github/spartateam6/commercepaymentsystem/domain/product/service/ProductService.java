@@ -83,10 +83,10 @@ public class ProductService {
     public void increaseStock(Long productId, int quantity) {
         validateQuantity(quantity);
 
-        Product product = productRepository.findById(productId)
+        productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        product.setStock(product.getStock() + quantity);
+        productRepository.increaseStock(productId, quantity);
     }
 
     private void validateQuantity(int quantity) {
