@@ -31,7 +31,9 @@ public class PaymentService {
 
     @Transactional
     public boolean requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
-        Payment payment = getPaymentByOrderNumber(paymentRequestDto.orderNumber());
+        Payment payment = paymentRepository.findByOrderNumberWithOrder(paymentRequestDto.orderNumber())
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
         Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
         // 결제 금액 검증
@@ -71,17 +73,14 @@ public class PaymentService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void cancelByOrder(String orderNumber, PaymentStatus target) {
-        Payment payment = getPaymentByOrderNumber(orderNumber);
+        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
         payment.changeStatus(target);
         if (target == PaymentStatus.REFUND && !MockData.refundPortone()) {
             // TODO: 실 결제 Portone 붙일 때 webhook 으로 처리
             throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
         }
-    }
-
-    private Payment getPaymentByOrderNumber(String orderNumber) {
-        return paymentRepository.findByOrderNumberWithOrder(orderNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
