@@ -20,7 +20,7 @@
 - [API 명세서 확인하기](./API_SPEC.md)
 - [회의록 및 팀 컨벤션](https://github.com/spartateam6/commerce-payment-system/wiki)
 - [README v1 (기본기 과제 README)](./README.v1.md)
-
+---
 ## Team Code Convention
 
 ### 📌 패키지 구조
@@ -94,9 +94,10 @@
 | `ON_SALE` | 판매 중 |
 | `DISCONTINUED` | 판매 중지 |
 
+---
 ## 📌 ERD
 
-<img width="2176" height="1522" alt="image" src="https://github.com/user-attachments/assets/ccff4061-2162-40a2-ac9c-24cef1a94113" />
+<img width="1300" height="688" alt="image" src="https://github.com/user-attachments/assets/ccff4061-2162-40a2-ac9c-24cef1a94113" />
 
 ## 📌 Flowchart
 
