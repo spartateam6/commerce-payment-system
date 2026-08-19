@@ -16,7 +16,7 @@ public record OrderItemResponse(
     public static OrderItemResponse from(OrderItem orderItem) {
         return new OrderItemResponse(
                 orderItem.getId(),
-                orderItem.getProduct().getId(),
+                orderItem.getProductId(),
                 orderItem.getProductNameSnapshot(),
                 orderItem.getUnitPriceSnapshot(),
                 orderItem.getQuantity(),
