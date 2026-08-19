@@ -21,7 +21,6 @@ public class MemberService {
         return MemberResponse.from(member);
     }
 
-    // orderFacade에서 사용하는 메서드입니다.
     @Transactional(readOnly = true)
     public Member getMember(Long memberId) {
         return memberRepository.findById(memberId)

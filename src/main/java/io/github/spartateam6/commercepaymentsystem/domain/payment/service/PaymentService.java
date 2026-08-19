@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -48,15 +47,14 @@ public class PaymentService {
 
         // TODO: 결제 요청 로직 (Portone)
         // ...
-        boolean paymentSuccess = MockData.processPortone();
 
         // 결제 실패
-        if (!paymentSuccess) {
+        if (paymentRequestDto.result() == PaymentRequestDto.PaymentResult.FAIL) {
             payment.changeStatus(PaymentStatus.FAILED);
             // 차감한 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());
 
-            order.updateStatus(OrderStatus.FAILED);
+            order.updateStatus(OrderStatus.CANCELLED);
 
             return false;
         }

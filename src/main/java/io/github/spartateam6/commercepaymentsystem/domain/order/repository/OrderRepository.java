@@ -1,7 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.repository;
 
-import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,12 +11,13 @@ import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
+    @NonNull
     @EntityGraph(attributePaths = {"orderItems", "orderItems.product"})
-    Optional<Order> findByIdAndMember(Long orderId, Member member);
+    Optional<Order> findById(@NonNull Long id);
 
-    Optional<Order> findByOrderNumberAndMember_Id(String orderNumber, Long memberId);
+    Optional<Order> findByOrderNumber(String orderNumber);
 
+    @EntityGraph(attributePaths = {"orderItems", "orderItems.product"})
     List<Order> findAllByMember_Id(Long memberId, Pageable pageable);
 
-    Optional<Order> findByIdAndMember_Id(Long id, Long memberId);
 }
