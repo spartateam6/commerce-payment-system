@@ -43,6 +43,9 @@ public class OrderItem extends AuditingEntity {
     )
     private Order order;
 
+    @Column(name = "product_id", insertable = false, updatable = false)
+    private Long productId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "product_id",
