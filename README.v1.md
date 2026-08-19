@@ -5,7 +5,7 @@
 회원이 상품을 조회하고 장바구니에 담아 주문·결제·취소까지 진행할 수 있으며,
 재고 차감과 복구, 결제 상태 관리를 통해 **데이터 정합성을 보장하는 커머스 백엔드 시스템**입니다.
 
-> 필수 과제에 대한 README 입니다
+> 기본기 과제에 대한 README 입니다
 
 ![Static Badge](https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white)
 ![Static Badge](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
@@ -14,12 +14,6 @@
 ![Static Badge](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
 ![Static Badge](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-
-## Links
-
-- [API 명세서 확인하기](./API_SPEC.md)
-- [회의록 및 팀 컨벤션](https://github.com/spartateam6/commerce-payment-system/wiki)
-- [README v1 (기본기 과제 README)](./README.v1.md)
 
 ## Team Convention
 
