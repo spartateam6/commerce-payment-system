@@ -21,37 +21,7 @@
 - [회의록 및 팀 컨벤션](https://github.com/spartateam6/commerce-payment-system/wiki)
 - [README v1 (기본기 과제 README)](./README.v1.md)
 
-## Team Convention
-
-### 📌 Git branch
-
-```
-feature/signup
-feature/product-list
-feature/cart-add
-```
-### 📌 Git Commit
-종류 | 의미
--- | --
-feature | 새로운 기능
-fix | 버그 수정
-refactor | 동작 변경 없는 구조 개선
-docs | 문서 수정
-chore | 설정·빌드 작업
-
-
-<!-- notionvc: 3e75a566-b7ca-4ad8-abc6-7e712d7e597e -->
-#### Workflow
-
-feature -> pr -> develop -> main
-
-#### Branch 전략
-
-- main 브랜치
-  - 직접 Push 막기
-  - PR review 최소 인원 1~3명
-- develop 브랜치
-  - 각자 작업한 내용은 여기로 merge
+## Team Code Convention
 
 ### 📌 패키지 구조
 
@@ -75,61 +45,163 @@ feature -> pr -> develop -> main
 
 #### Enum
 
-- 결제
+- Order
 
-  - 대기 : `PENDING`
-  - 완료 : `PAID`
-  - 실패 : `FAILED`
-  - 부분환불 : ``
-  - 취소 : `REFUND`
+| Status | Description |
+|---|---|
+| `PAYMENT_PENDING` | 주문 생성 후 결제 대기 |
+| `CONFIRMED` | 결제 완료 및 주문 확정 |
+| `CANCELLED` | 주문 취소 또는 전액 환불 완료 |
 
-- 주문
+- Payment
 
-  - 결제대기 : `PENDING`
-  - 주문완료 : `ORDERED`
-  - 주문취소 : `CANCELED`
+| Status | Description |
+|---|---|
+| `PENDING` | 결제 대기 |
+| `PAID` | 결제 완료 |
+| `FAILED` | 결제 실패 |
+| `REFUNDED` | 전액 환불 완료 |
 
-#### 공통 응답 구조
+- Refund
 
-```json
-{
-  "code": "<오류 코드>",
-  "message": "<오류 메시지>",
-  "data": "<데이터> (존재하지 않을 수도 있음)"
-}
-```
+| Status | Description |
+|---|---|
+| `COMPLETED` | 전액 환불 완료 |
+| `FAILED` | 전액 환불 실패 |
+
+- Point Transaction
+
+| Type | Description |
+|---|---|
+| `USE` | 포인트 사용 |
+| `EARN` | 포인트 적립 |
+| `USE_RESTORE` | 사용 포인트 반환 |
+| `EARN_REVOKE` | 적립 포인트 회수 |
+
+- Webhook Event
+
+| Status | Description |
+|---|---|
+| `RECEIVED` | 웹훅 수신 |
+| `PROCESSED` | 정상 처리 완료 |
+| `FAILED` | 처리 실패 |
+| `IGNORED` | 중복 이벤트 또는 처리 불필요 |
+
+- Product
+
+| Status | Description |
+|---|---|
+| `ON_SALE` | 판매 중 |
+| `DISCONTINUED` | 판매 중지 |
 
 ## 📌 ERD
 
-<img width="1341" alt="6조 팀플 - 프레임 2 (1)" src="https://github.com/user-attachments/assets/3a6f2468-b742-41c1-a9da-c74050cee286" />
+<img width="2176" height="1522" alt="image" src="https://github.com/user-attachments/assets/ccff4061-2162-40a2-ac9c-24cef1a94113" />
 
-## 📌 전체 API 목록
+## 📌 Flowchart
 
-| 진행 상태 | 기능 분류 | 기능명 | HTTP Method | API Path | 담당자 |
-|:---:|:---:|---|:---:|---|:---:|
-| 시작 전 | 상품 | 상품 목록 조회 | `GET` | `/api/products` |  |
-| 시작 전 | 상품 | 상품 상세 조회 | `GET` | `/api/products/{productId}` |  |
-| 시작 전 | 회원 | 회원가입 | `POST` | `/api/auth/signup` |  |
-| 시작 전 | 회원 | 로그인 및 JWT 발급 | `POST` | `/api/auth/login` |  |
-| 시작 전 | 회원 | 내 정보 조회 | `GET` | `/api/members/me` |  |
-| 시작 전 | 장바구니 | 상품 담기 | `POST` | `/api/cart/items` |  |
-| 시작 전 | 장바구니 | 장바구니 조회 | `GET` | `/api/cart/items` |  |
-| 시작 전 | 장바구니 | 상품 수량 변경 | `PATCH` | `/api/cart/items/{cartItemId}` |  |
-| 시작 전 | 장바구니 | 상품 삭제 | `DELETE` | `/api/cart/items/{cartItemId}` |  |
-| 시작 전 | 장바구니 | 장바구니 비우기 | `DELETE` | `/api/cart/items` |  |
-| 시작 전 | 주문 | 주문 미리보기 | `GET` | `/api/orders/preview` |  |
-| 시작 전 | 주문 | 주문 생성 | `POST` | `/api/orders` |  |
-| 시작 전 | 주문 | 주문 전체 취소 | `POST` | `/api/orders/{orderId}/cancel` |  |
-| 시작 전 | 주문 | 주문 목록 조회 | `GET` | `/api/orders` |  |
-| 시작 전 | 주문 | 주문 상세 조회 | `GET` | `/api/orders/{orderId}` |  |
-| 시작 전 | 결제 | 모의 결제 승인 | `POST` | `/api/payments/confirm` |  |
+## 주문 / 결제 처리 흐름
+
+### 1. 상품 주문 + 재고 선차감
+
+상품 주문 시 재고를 확인하고 비관적 락을 통해 동시 주문 상황에서도
+재고 정합성을 보장하며, 결제 이전에 재고를 선차감합니다.
+
+<details>
+<summary><b>상품 주문 + 재고 선차감 흐름</b></summary>
+
+<p align="center">
+  <img width="1292" height="1286" alt="image" src="https://github.com/user-attachments/assets/60fb3747-bac1-4a70-9c44-07258fb58794" />
+</p>
+
+</details>
 
 ---
 
-## 📌 Flowchart
-<img width="688" height="666" alt="주문 생성 요청" src="https://github.com/user-attachments/assets/976574f9-e5f5-46ed-a508-3e5ac75bccfc" />
-<img width="669" height="684" alt="모의 결제 요청" src="https://github.com/user-attachments/assets/f202893d-f353-4bb3-9113-9bd0f2659b3a" />
-<img width="687" height="639" alt="주문 취소 요청" src="https://github.com/user-attachments/assets/10eccad2-3430-4ef7-8ad4-dd1a298c6a3d" />
+### 2. 일반 카드 결제
+
+PortOne 결제 완료 후 서버에서 실제 결제 상태와 결제 금액을 검증하고,
+검증이 완료되면 결제 및 주문 상태를 확정합니다.
+
+<details>
+<summary><b>일반 카드 결제 흐름</b></summary>
+
+<p align="center">
+  <img width="1214" height="1206" alt="image" src="https://github.com/user-attachments/assets/85110940-ca33-4f7f-8b74-56016acde02b" />
+</p>
+
+</details>
+
+---
+
+### 3. 포인트 + 카드 복합 결제
+
+사용 포인트를 제외한 금액만 PG를 통해 결제하고,
+결제 금액 검증 후 포인트 사용 및 적립 내역을 함께 처리합니다.
+
+<details>
+<summary><b>포인트 + 카드 복합 결제 상세 흐름</b></summary>
+
+<br>
+
+<p align="center">
+  <img width="1634" height="1568" alt="image" src="https://github.com/user-attachments/assets/165f748a-315f-4165-aaa8-39cb31279643" />
+</p>
+
+</details>
+
+---
+
+### 4. 포인트 전액(PG 0원) 결제
+
+주문 금액 전액을 포인트로 결제하는 경우 PG 결제 과정을 생략하고,
+포인트 잔액 차감 및 포인트 원장 기록만으로 주문을 확정합니다.
+
+<details>
+<summary><b>포인트 전액(PG 0원) 결제 흐름</b></summary>
+
+<br>
+
+<p align="center">
+  <img width="1630" height="1576" alt="image" src="https://github.com/user-attachments/assets/cbc354f7-aa36-4b88-9c91-80c9a291a244" />
+</p>
+
+</details>
+
+---
+
+### 5. 웹훅 <-> Client Confirm 멱등 동기화
+
+Client Confirm API와 PortOne Webhook의 도착 순서가 달라지거나
+동일한 웹훅이 재전송되더라도 중복 결제 처리가 발생하지 않도록 멱등성을 보장합니다.
+
+<details>
+<summary><b>웹훅 <-> Client Confirm 멱등 동기화</b></summary>
+  
+<p align="center">
+  <img width="1402" height="1598" alt="image" src="https://github.com/user-attachments/assets/73b535eb-7d8a-4369-9d2a-1098cd8472b3" />
+</p>
+
+</details>
+
+---
+
+### 6. 포인트 잔액 ↔ 원장 동기화/음수 잔액 정책
+
+환불 및 적립 포인트 회수 과정에서 회원의 현재 포인트 잔액과
+포인트 거래 원장의 정합성을 검증하며, 회수할 포인트가 부족한 경우
+음수 잔액을 허용하는 정책을 통해 원장과 실제 잔액의 일관성을 유지합니다.
+
+<details>
+<summary><b>포인트 회수 및 잔액 동기화 상세 흐름</b></summary>
+
+<br>
+
+<p align="center">
+  <img width="1392" height="1486" alt="image" src="https://github.com/user-attachments/assets/468a64e6-6814-4456-99c8-c41e64b60bbe" />
+</p>
+
+</details>
 
 # 🧑‍💻 Contributors
 
