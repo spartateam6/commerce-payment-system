@@ -1,0 +1,58 @@
+package io.github.spartateam6.commercepaymentsystem.domain.point.service;
+
+import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
+import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
+import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransaction;
+import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransactionType;
+import io.github.spartateam6.commercepaymentsystem.domain.point.repository.PointTransactionRepository;
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class PointService {
+
+    private static final int EARN_RATE_PERCENT = 1;
+
+    private static final List<PointTransactionType> PAYMENT_TYPES =
+            List.of(PointTransactionType.USE, PointTransactionType.EARN);
+
+    private static final List<PointTransactionType> REFUND_TYPES =
+            List.of(PointTransactionType.USE_RESTORE, PointTransactionType.EARN_REVOKE);
+
+    private final MemberRepository memberRepository;
+    private final PointTransactionRepository pointTransactionRepository;
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void setPayment(Long memberId, Payment payment,Integer usedPointAmount, Integer pgAmount){}
+
+    private int amount(Long memberId, Long paymentId, PointTransactionType transactionType) {
+
+        return pointTransactionRepository.findByMember_IdAndPayment_IdAndTransactionType(memberId, paymentId, transactionType)
+                .map(transaction -> Math.abs(transaction.getAmount()))
+                .orElse(0);
+    }
+
+    private void saveTransaction(Member member, Payment payment,
+                                 PointTransactionType transactionType, int amount) {
+        if (amount == 0) {
+            return;
+        }
+        pointTransactionRepository.save(new PointTransaction(member, payment, transactionType, amount));
+    }
+
+
+    private Member getMemberForUpdate(Long memberId) {
+        return memberRepository.findByIdForUpdate(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+}

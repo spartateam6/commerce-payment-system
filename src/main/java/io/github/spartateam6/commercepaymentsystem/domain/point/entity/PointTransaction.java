@@ -43,4 +43,19 @@ public class PointTransaction extends AuditingEntity {
     @Column(name = "amount", nullable = false)
     private Integer amount;
 
+    public PointTransaction(
+            Member member,
+            Payment payment,
+            PointTransactionType transactionType,
+            int amount
+    ) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("거래 금액은 0보다 커야 합니다: " + amount);
+        }
+        this.member = member;
+        this.payment = payment;
+        this.transactionType = transactionType;
+        this.amount = transactionType.signed(amount);
+    }
+
 }
