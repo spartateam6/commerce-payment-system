@@ -1,6 +1,5 @@
 package io.github.spartateam6.commercepaymentsystem.domain.payment.port;
 
-/** domain 계층의 포트 : PortOne이라는 단어가 없다 */
 public interface PaymentGateway {
 
     // PG사에서 실제 결제 정보 조회 (상태 · 금액 검증용)
