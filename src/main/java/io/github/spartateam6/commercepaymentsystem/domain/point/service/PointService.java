@@ -32,7 +32,25 @@ public class PointService {
     private final PointTransactionRepository pointTransactionRepository;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void setPayment(Long memberId, Payment payment,Integer usedPointAmount, Integer pgAmount){}
+    public void setPayment(Long memberId, Payment payment, Integer usedPointAmount, Integer pgAmount) {
+        int use = usedPointAmount == null ? 0 : usedPointAmount;
+        if (use < 0) {
+            throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+        Member member = getMemberForUpdate(memberId);
+        if (pointTransactionRepository.existsByMember_IdAndPayment_IdAndTransactionTypeIn(memberId, payment.getId(), PAYMENT_TYPES)) {
+            return;
+        }
+        if (member.getPointBalance() < use) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
+        }
+        int earn = pgAmount == null ? 0 : pgAmount * EARN_RATE_PERCENT/100;
+
+        saveTransaction(member, payment, PointTransactionType.USE, use);
+        saveTransaction(member, payment, PointTransactionType.EARN, earn);
+
+        member.changePoint(earn - use);
+    }
 
     private int amount(Long memberId, Long paymentId, PointTransactionType transactionType) {
 
