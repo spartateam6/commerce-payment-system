@@ -3,6 +3,7 @@
 -- FK 때문에 자식 테이블부터 삭제
 -- ---------------------------------------------------------
 
+DELETE FROM point_transactions;
 DELETE FROM order_items;
 DELETE FROM payment;
 DELETE FROM orders;
@@ -24,7 +25,8 @@ INSERT INTO member (
     email,
     name,
     password,
-    phone_number
+    phone_number,
+    point_balance
 )
 VALUES
     (
@@ -34,7 +36,8 @@ VALUES
         'user1@test.com',
         '테스트유저1',
         '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
-        '010-1111-1111'
+        '010-1111-1111',
+        1000000
     ),
     (
         2,
@@ -43,7 +46,8 @@ VALUES
         'user2@test.com',
         '테스트유저2',
         '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
-        '010-2222-2222'
+        '010-2222-2222',
+        0
     );
 
 
@@ -251,7 +255,6 @@ VALUES
         NOW(6),
         NOW(6),
         30000,
-        0,
         NULL,
         'PENDING',
         1
@@ -261,7 +264,6 @@ VALUES
         NOW(6),
         NOW(6),
         30000,
-        0,
         NOW(6),
         'PAID',
         2
@@ -271,7 +273,6 @@ VALUES
         NOW(6),
         NOW(6),
         12000,
-        0,
         NULL,
         'PENDING',
         3
