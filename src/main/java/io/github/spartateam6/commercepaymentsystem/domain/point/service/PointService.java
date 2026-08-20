@@ -3,12 +3,17 @@ package io.github.spartateam6.commercepaymentsystem.domain.point.service;
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
+import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointBalanceResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointTransactionResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransaction;
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransactionType;
 import io.github.spartateam6.commercepaymentsystem.domain.point.repository.PointTransactionRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,11 +36,27 @@ public class PointService {
     private final MemberRepository memberRepository;
     private final PointTransactionRepository pointTransactionRepository;
 
+    public PointBalanceResponse getBalance(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return PointBalanceResponse.from(member.getPointBalance());
+    }
+
+    public PageResponse<PointTransactionResponse> getTransactions(Long memberId, Pageable pageable) {
+        Page<PointTransaction> transactionPage = pointTransactionRepository.findByMember_Id(memberId, pageable);
+
+        List<PointTransactionResponse> content = transactionPage.getContent()
+                .stream()
+                .map(PointTransactionResponse::from)
+                .toList();
+        return PageResponse.of(content, transactionPage);
+    }
+
     @Transactional(propagation = Propagation.MANDATORY)
     public void setPayment(Long memberId, Payment payment, Integer usedPointAmount, Integer pgAmount) {
         int use = usedPointAmount == null ? 0 : usedPointAmount;
         if (use < 0) {
-            throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
+            throw new BusinessException(ErrorCode.INVALID_POINT_AMOUNT);
         }
         Member member = getMemberForUpdate(memberId);
         if (pointTransactionRepository.existsByMember_IdAndPayment_IdAndTransactionTypeIn(memberId, payment.getId(), PAYMENT_TYPES)) {
