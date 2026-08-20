@@ -14,7 +14,7 @@ public class PaymentFixture {
         Order order = Order.create(MemberFixture.members.get(0), "ORD-20260814-0001");
         return Payment.builder()
                 .order(order)
-                .amount(30000)
+                .orderAmount(30000)
                 .status(status)
                 .build();
     }
