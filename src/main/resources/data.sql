@@ -276,3 +276,6 @@ VALUES
         'PENDING',
         3
     );
+INSERT INTO point_transactions (member_id, payment_id, transaction_type, amount, created_at, updated_at)
+VALUES (1, 2, 'USE', -5000, NOW(6), NOW(6)),
+       (1, 2, 'EARN', 450, NOW(6), NOW(6));
