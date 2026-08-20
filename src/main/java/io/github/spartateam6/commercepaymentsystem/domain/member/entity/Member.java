@@ -57,5 +57,11 @@ public class Member extends AuditingEntity {
     @Column(name = "phone_number", nullable = false, length = 30)
     private String phoneNumber;
 
+    @Column(name = "point_balance", nullable = false)
+    @Builder.Default
+    private Integer pointBalance = 0;
 
+    public void changePoint(int changeAmount) {
+        this.pointBalance += changeAmount;
+    }
 }
