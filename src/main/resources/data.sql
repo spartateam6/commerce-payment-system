@@ -244,7 +244,6 @@ INSERT INTO payment (
     created_at,
     updated_at,
     order_amount,
-    earned_point_snapshot,
     completed_at,
     status,
     order_id
