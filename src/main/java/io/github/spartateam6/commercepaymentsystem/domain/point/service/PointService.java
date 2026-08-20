@@ -17,6 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PointService {
 
     private static final int EARN_RATE_PERCENT = 1;
