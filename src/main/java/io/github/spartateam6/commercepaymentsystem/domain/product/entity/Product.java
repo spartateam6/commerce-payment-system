@@ -3,14 +3,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.product.entity;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -45,6 +38,11 @@ public class Product extends AuditingEntity {
     @NotNull
     @Column(name = "stock", nullable = false)
     private Integer stock;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sale_status", nullable = false, length = 20)
+    private SaleStatus saleStatus;
 
     public void deductStock(int quantity) {
         if (this.stock < quantity) {
