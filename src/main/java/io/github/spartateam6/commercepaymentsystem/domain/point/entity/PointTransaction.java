@@ -31,8 +31,10 @@ public class PointTransaction extends AuditingEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    // 초기 지급(더미 데이터)처럼 결제와 무관한 거래도 원장에 남기기 위해 nullable.
+    // 잔액 == SUM(amount)를 예외 없이 성립시키려는 목적(시나리오 #5).
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id", nullable = false)
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
     @NotNull

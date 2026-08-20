@@ -81,12 +81,11 @@ public class PointService {
         }
         int restoreAmount = amount(memberId, payment.getId(), PointTransactionType.USE);
         int revokeAmount = amount(memberId, payment.getId(), PointTransactionType.EARN);
-        int revokableAmount = Math.min(revokeAmount, member.getPointBalance() + restoreAmount);
 
         saveTransaction(member, payment, PointTransactionType.USE_RESTORE, restoreAmount);
-        saveTransaction(member, payment, PointTransactionType.EARN_REVOKE, revokableAmount);
+        saveTransaction(member, payment, PointTransactionType.EARN_REVOKE, revokeAmount);
 
-        member.changePoint(restoreAmount - revokableAmount);
+        member.changePoint(restoreAmount - revokeAmount);
     }
 
     private int amount(Long memberId, Long paymentId, PointTransactionType transactionType) {
