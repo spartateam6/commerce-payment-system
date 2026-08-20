@@ -39,13 +39,20 @@ public class Payment extends AuditingEntity {
     private Order order;
 
     @NotNull
-    @Column(name = "amount", nullable = false)
-    private Integer amount;
+    @Column(name = "order_amount", nullable = false)
+    private Integer orderAmount;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private PaymentStatus status;
+
+    @NotNull
+    @Column(name = "earned_point_snapshot", nullable = false)
+    private Integer earnedPointSnapshot;
+
+    @Column(name = "portone_payment_id")
+    private String portonePaymentId;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
@@ -53,12 +60,13 @@ public class Payment extends AuditingEntity {
     @Builder
     public Payment(
         Order order,
-        Integer amount,
+        Integer orderAmount,
         PaymentStatus status
     ) {
         this.order = order;
-        this.amount = amount;
+        this.orderAmount = orderAmount;
         this.status = status;
+        this.completedAt = null;
     }
 
     public void changeStatus(PaymentStatus newStatus) {
@@ -70,14 +78,5 @@ public class Payment extends AuditingEntity {
         if (newStatus == PaymentStatus.PAID) {
             this.completedAt = LocalDateTime.now();
         }
-    }
-
-    public static Payment createPending(Order order, Integer amount) {
-        Payment payment = new Payment();
-        payment.order = order;
-        payment.amount = amount;
-        payment.status = PaymentStatus.PENDING;
-        payment.completedAt = null;
-        return payment;
     }
 }
