@@ -56,10 +56,11 @@ INSERT INTO product (
     created_at,
     updated_at,
     category,
-    description,
+    descroption,
     name,
     price,
-    stock
+    stock,
+    sale_status
 )
 VALUES
     (
@@ -70,7 +71,8 @@ VALUES
         '기본 반팔 티셔츠',
         '반팔 티셔츠',
         15000,
-        8
+        8,
+        'ON_SALE'
     ),
     (
         2,
@@ -80,27 +82,38 @@ VALUES
         '기본 청바지',
         '청바지',
         30000,
-        4
-    ),
-    (
-        3,
-        NOW(6),
-        NOW(6),
-        'FOOD',
-        '테스트용 사과',
-        '사과',
-        12000,
-        19
-    ),
-    (
         4,
-        NOW(6),
-        NOW(6),
-        'ETC',
-        '테스트용 텀블러',
-        '텀블러',
-        20000,
-        0
+        'ON_SALE'
+    ),
+    (3,
+     NOW(6),
+     NOW(6),
+     'FOOD',
+     '테스트용 사과',
+     '사과',
+     12000,
+     19,
+     'ON_SALE'
+    ),
+    (4,
+     NOW(6),
+     NOW(6),
+     'ETC',
+     '테스트용 텀블러',
+     '텀블러',
+     20000,
+     0,
+     'ON_SALE'
+    ),
+    (5,
+     NOW(6),
+     NOW(6),
+     'CLOTHES',
+     '작년 시즌 재킷',
+     '재킷',
+     89000,
+     0,
+     'DISCONTINUED'
     );
 
 
