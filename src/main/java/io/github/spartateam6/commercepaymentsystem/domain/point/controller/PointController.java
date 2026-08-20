@@ -31,7 +31,7 @@ public class PointController {
     public ApiResponse<PageResponse<PointTransactionResponse>> getTransactions(
             @MemberId Long memberId, @Parameter(hidden = true) @PageableDefault(
                     size = 20,
-                    sort = "id",
+                    sort = {"createdAt", "id"},
                     direction = Sort.Direction.DESC
             ) Pageable pageable
             ) {

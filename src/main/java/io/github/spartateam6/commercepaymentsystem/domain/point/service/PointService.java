@@ -53,34 +53,37 @@ public class PointService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void setPayment(Long memberId, Payment payment, Integer usedPointAmount, Integer pgAmount) {
-        int use = usedPointAmount == null ? 0 : usedPointAmount;
-        if (use < 0) {
+    public void applyPaymentPoint(Long memberId, Payment payment, Integer usedPoint, Integer pgAmount) {
+        int used = usedPoint == null ? 0 : usedPoint;
+        if (used < 0) {
             throw new BusinessException(ErrorCode.INVALID_POINT_AMOUNT);
         }
         Member member = getMemberForUpdate(memberId);
-        if (pointTransactionRepository.existsByMember_IdAndPayment_IdAndTransactionTypeIn(memberId, payment.getId(), PAYMENT_TYPES)) {
+        if (hasPaymentTransactions(memberId, payment.getId())) {
             return;
         }
-        if (member.getPointBalance() < use) {
+        if (member.getPointBalance() < used) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
         }
-        int earn = pgAmount == null ? 0 : pgAmount * EARN_RATE_PERCENT/100;
+        int earned = pgAmount == null ? 0 : pgAmount * EARN_RATE_PERCENT/100;
 
-        saveTransaction(member, payment, PointTransactionType.USE, use);
-        saveTransaction(member, payment, PointTransactionType.EARN, earn);
+        saveTransaction(member, payment, PointTransactionType.USE, used);
+        saveTransaction(member, payment, PointTransactionType.EARN, earned);
 
-        member.changePoint(earn - use);
+        member.changePoint(earned - used);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void setRefund(Long memberId, Payment payment) {
+    public void applyRefundPoint(Long memberId, Payment payment) {
         Member member = getMemberForUpdate(memberId);
-        if (pointTransactionRepository.existsByMember_IdAndPayment_IdAndTransactionTypeIn(memberId, payment.getId(), REFUND_TYPES)) {
+        if (hasRefundTransactions(memberId, payment.getId())) {
             return;
         }
-        int restoreAmount = amount(memberId, payment.getId(), PointTransactionType.USE);
-        int revokeAmount = amount(memberId, payment.getId(), PointTransactionType.EARN);
+
+        int restoreAmount =
+                getTransactionAmount(memberId, payment.getId(), PointTransactionType.USE);
+        int revokeAmount =
+                getTransactionAmount(memberId, payment.getId(), PointTransactionType.EARN);
 
         saveTransaction(member, payment, PointTransactionType.USE_RESTORE, restoreAmount);
         saveTransaction(member, payment, PointTransactionType.EARN_REVOKE, revokeAmount);
@@ -88,12 +91,6 @@ public class PointService {
         member.changePoint(restoreAmount - revokeAmount);
     }
 
-    private int amount(Long memberId, Long paymentId, PointTransactionType transactionType) {
-
-        return pointTransactionRepository.findByMember_IdAndPayment_IdAndTransactionType(memberId, paymentId, transactionType)
-                .map(transaction -> Math.abs(transaction.getAmount()))
-                .orElse(0);
-    }
 
     private void saveTransaction(Member member, Payment payment,
                                  PointTransactionType transactionType, int amount) {
@@ -107,6 +104,39 @@ public class PointService {
     private Member getMemberForUpdate(Long memberId) {
         return memberRepository.findByIdForUpdate(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private boolean hasPaymentTransactions(Long memberId, Long paymentId) {
+        return pointTransactionRepository
+                .existsByMember_IdAndPayment_IdAndTransactionTypeIn(
+                        memberId,
+                        paymentId,
+                        PAYMENT_TYPES
+                );
+    }
+
+    private boolean hasRefundTransactions(Long memberId, Long paymentId) {
+        return pointTransactionRepository
+                .existsByMember_IdAndPayment_IdAndTransactionTypeIn(
+                        memberId,
+                        paymentId,
+                        REFUND_TYPES
+                );
+    }
+
+    private int getTransactionAmount(
+            Long memberId,
+            Long paymentId,
+            PointTransactionType transactionType
+    ) {
+        return pointTransactionRepository
+                .findByMember_IdAndPayment_IdAndTransactionType(
+                        memberId,
+                        paymentId,
+                        transactionType
+                )
+                .map(transaction -> Math.abs(transaction.getAmount()))
+                .orElse(0);
     }
 
 }

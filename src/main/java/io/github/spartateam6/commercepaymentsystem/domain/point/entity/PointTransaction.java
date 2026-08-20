@@ -51,9 +51,16 @@ public class PointTransaction extends AuditingEntity {
             PointTransactionType transactionType,
             int amount
     ) {
+        if (member == null) {
+            throw new IllegalArgumentException("회원은 필수입니다.");
+        }
+        if (transactionType == null) {
+            throw new IllegalArgumentException("거래 유형은 필수입니다.");
+        }
         if (amount <= 0) {
             throw new IllegalArgumentException("거래 금액은 0보다 커야 합니다: " + amount);
         }
+
         this.member = member;
         this.payment = payment;
         this.transactionType = transactionType;
