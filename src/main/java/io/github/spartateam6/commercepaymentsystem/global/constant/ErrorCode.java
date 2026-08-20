@@ -56,6 +56,7 @@ public enum ErrorCode {
     PAYMENT_NOT_MATCH_ORDER(HttpStatus.BAD_REQUEST, "PAYMENT_006", "결제 정보가 주문과 일치하지 않습니다."),
     ALREADY_PROCESSED_REFUND(HttpStatus.CONFLICT, "PAYMENT_007", "이미 처리된 환불(취소)요청입니다."),
     PAYMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "PAYMENT_008", "해당 주문의 결제 정보가 이미 존재합니다."),
+    PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "PAYMENT_008", "PG사 처리 중 오류가 발생했습니다"),
 
     // Webhook
     INVALID_WEBHOOK_SIGNATURE(HttpStatus.UNAUTHORIZED, "WEBHOOK_001", "웹훅 서명이 유효하지 않습니다."),
