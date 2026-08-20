@@ -17,7 +17,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PointService {
 
     private static final int EARN_RATE_PERCENT = 1;
@@ -50,6 +49,22 @@ public class PointService {
         saveTransaction(member, payment, PointTransactionType.EARN, earn);
 
         member.changePoint(earn - use);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void setRefund(Long memberId, Payment payment) {
+        Member member = getMemberForUpdate(memberId);
+        if (pointTransactionRepository.existsByMember_IdAndPayment_IdAndTransactionTypeIn(memberId, payment.getId(), REFUND_TYPES)) {
+            return;
+        }
+        int restoreAmount = amount(memberId, payment.getId(), PointTransactionType.USE);
+        int revokeAmount = amount(memberId, payment.getId(), PointTransactionType.EARN);
+        int revokableAmount = Math.min(revokeAmount, member.getPointBalance() + restoreAmount);
+
+        saveTransaction(member, payment, PointTransactionType.USE_RESTORE, restoreAmount);
+        saveTransaction(member, payment, PointTransactionType.EARN_REVOKE, revokableAmount);
+
+        member.changePoint(restoreAmount - revokableAmount);
     }
 
     private int amount(Long memberId, Long paymentId, PointTransactionType transactionType) {
