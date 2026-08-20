@@ -38,7 +38,7 @@ public class PaymentService {
 
         // 결제 금액 검증
         // 프론트에서 넘어온 가격 == DB 가격 ?
-        if (!payment.getAmount().equals(paymentRequestDto.price())) {
+        if (!payment.getOrderAmount().equals(paymentRequestDto.price())) {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
@@ -93,7 +93,12 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
-        Payment payment = Payment.createPending(order, amount);
+        Payment payment = Payment.builder()
+                .order(order)
+                .orderAmount(amount)
+                .status(PaymentStatus.PENDING)
+                .build();
+
         paymentRepository.save(payment);
     }
 
