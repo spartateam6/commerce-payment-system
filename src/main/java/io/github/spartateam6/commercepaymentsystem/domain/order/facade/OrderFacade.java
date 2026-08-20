@@ -106,11 +106,14 @@ public class OrderFacade {
 
     @Transactional
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
-        Member member = memberService.getMember(memberId);
 
-        List<CartItemForOrderResponse> cartItems =
-                getOwnedCartItems(memberId, request.cartItemIds());
+        // 회원 조회 및 잠금
+        Member member = memberService.getMemberForUpdate(memberId);
 
+        // 주문할 장바구니 항목 조회
+        List<CartItemForOrderResponse> cartItems = getOwnedCartItems(memberId, request.cartItemIds());
+
+        // 상품별 주문 수량 계산
         Map<Long, Integer> quantities = cartItems.stream()
                 .collect(Collectors.toMap(
                         CartItemForOrderResponse::productId,
@@ -123,9 +126,15 @@ public class OrderFacade {
                         LinkedHashMap::new
                 ));
 
+        // 상품 잠금 및 재고 선차감
         Map<Long, ProductForOrderResponse> reservedProducts = productService.validateAndDecreaseStocks(quantities);
 
+        // 주문 예정 정보 계산
         PreparedOrder preparedOrder = prepareOrder(cartItems, reservedProducts);
+
+        // 포인트 검증 및 차감
+        validatePointUsage(request.pointToUse(), preparedOrder.totalAmount());
+        member.usePoint(request.pointToUse());
 
         List<OrderService.CreateOrderItem> createItems = preparedOrder.items()
                 .stream()
@@ -137,11 +146,11 @@ public class OrderFacade {
                 ))
                 .toList();
 
-        Order savedOrder = orderService.createOrder(member, generateOrderNumber(), createItems);
+        // 주문과 주문상품 생성
+        Order savedOrder = orderService.createOrder(member, generateOrderNumber(), request.pointToUse(), createItems);
 
-        paymentService.createPendingPayment(savedOrder, savedOrder.getTotalAmount());
+        paymentService.createPendingPayment(savedOrder);
 
-        // 결제 완료 전이므로 장바구니는 비우지 않는다.
         return OrderCreateResponse.from(savedOrder);
     }
 
@@ -270,6 +279,12 @@ public class OrderFacade {
                 .toUpperCase();
 
         return "ORD-" + dateTime + "-" + randomValue;
+    }
+
+    private void validatePointUsage(Integer pointToUse, Integer totalAmount) {
+        if (pointToUse == null || pointToUse < 0 || pointToUse > totalAmount) {
+            throw new BusinessException(ErrorCode.INVALID_POINT_USAGE);
+        }
     }
 
     private record PreparedItem(

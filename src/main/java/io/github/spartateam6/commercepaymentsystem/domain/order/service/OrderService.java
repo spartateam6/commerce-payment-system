@@ -28,9 +28,10 @@ public class OrderService {
     public Order createOrder(
             Member member,
             String orderNumber,
+            Integer pointUsedAmount,
             List<CreateOrderItem> orderItems
     ) {
-        Order order = Order.create(member, orderNumber);
+        Order order = Order.create(member, orderNumber, pointUsedAmount);
 
         orderItems.forEach(item -> order.addOrderItem(
                 item.product(),

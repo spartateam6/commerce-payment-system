@@ -45,6 +45,8 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_008", "주문을 찾을 수 없습니다."),
     ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
     ALREADY_ORDER_CANCELED(HttpStatus.CONFLICT, "ORDER_010", "이미 취소된 주문입니다."),
+    INVALID_POINT_USAGE(HttpStatus.BAD_REQUEST, "ORDER_011", "사용할 포인트 금액이 올바르지 않습니다."),
+
 
 
     // Payment
