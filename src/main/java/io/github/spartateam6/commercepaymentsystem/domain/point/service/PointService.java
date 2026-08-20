@@ -1,7 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.point.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
-import io.github.spartateam6.commercepaymentsystem.domain.member.repository.MemberRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.member.service.MemberService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointBalanceResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointTransactionResponse;
@@ -33,12 +33,11 @@ public class PointService {
     private static final List<PointTransactionType> REFUND_TYPES =
             List.of(PointTransactionType.USE_RESTORE, PointTransactionType.EARN_REVOKE);
 
-    private final MemberRepository memberRepository;
+    private final MemberService memberService;
     private final PointTransactionRepository pointTransactionRepository;
 
     public PointBalanceResponse getBalance(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberService.getMember(memberId);
         return PointBalanceResponse.from(member.getPointBalance());
     }
 
@@ -102,8 +101,8 @@ public class PointService {
 
 
     private Member getMemberForUpdate(Long memberId) {
-        return memberRepository.findByIdForUpdate(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return memberService.getMemberForUpdate(memberId);
+
     }
 
     private boolean hasPaymentTransactions(Long memberId, Long paymentId) {
