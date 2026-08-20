@@ -239,7 +239,8 @@ INSERT INTO payment (
     id,
     created_at,
     updated_at,
-    amount,
+    order_amount,
+    earned_point_snapshot,
     completed_at,
     status,
     order_id
@@ -250,6 +251,7 @@ VALUES
         NOW(6),
         NOW(6),
         30000,
+        0,
         NULL,
         'PENDING',
         1
@@ -259,6 +261,7 @@ VALUES
         NOW(6),
         NOW(6),
         30000,
+        0,
         NOW(6),
         'PAID',
         2
@@ -268,6 +271,7 @@ VALUES
         NOW(6),
         NOW(6),
         12000,
+        0,
         NULL,
         'PENDING',
         3

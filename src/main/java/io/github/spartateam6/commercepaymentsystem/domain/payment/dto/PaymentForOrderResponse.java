@@ -16,7 +16,7 @@ public record PaymentForOrderResponse(
         return new PaymentForOrderResponse(
                 payment.getId(),
                 payment.getOrder().getId(),
-                payment.getAmount(),
+                payment.getOrderAmount(),
                 payment.getStatus().name(),
                 payment.getCompletedAt(),
                 payment.getCreatedAt()
