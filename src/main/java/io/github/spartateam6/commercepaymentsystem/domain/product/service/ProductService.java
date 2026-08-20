@@ -38,12 +38,14 @@ public class ProductService {
         Specification<Product> spec = Specification
                 .where(ProductSpecification.categoryEquals(condition.category()))
                 .and(ProductSpecification.priceGoe(condition.minPrice()))
-                .and(ProductSpecification.priceLoe(condition.maxPrice()));
+                .and(ProductSpecification.priceLoe(condition.maxPrice()))
+                .and(ProductSpecification.saleStatusEquals(condition.saleStatus()))
+                .and(ProductSpecification.soldOutEquals(condition.soldOut()));
 
         Pageable pageable = PageRequest.of(
                 condition.page() -1,
                 condition.size(),
-                Sort.by(Sort.Direction.DESC, "createdAt")
+                resolveSort(condition.sort())
         );
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
@@ -68,6 +70,19 @@ public class ProductService {
             throw new BusinessException(ErrorCode.INVALID_INPUT,
                     "size는 1 이상 " + MAX_PAGE_SIZE + " 이하이어야 합니다.");
         }
+    }
+
+    private Sort resolveSort(String sort) {
+        if (sort == null || sort.equals("latest")) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        if (sort.equals("priceAsc")) {
+            return Sort.by(Sort.Direction.ASC, "price");
+        }
+        if (sort.equals("priceDesc")) {
+            return Sort.by(Sort.Direction.DESC, "price");
+        }
+        throw new BusinessException(ErrorCode.INVALID_INPUT, "지원하지 않는 정렬 조건입니다: " + sort);
     }
 
 
