@@ -24,7 +24,7 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
-            @RequestParam(required = false) SaleStatus saleStatus,
+            @RequestParam(required = false) String saleStatus,
             @RequestParam(required = false) Boolean soldOut,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "1") int page,

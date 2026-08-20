@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.P
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
+import io.github.spartateam6.commercepaymentsystem.domain.product.entity.SaleStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductRepository;
 import io.github.spartateam6.commercepaymentsystem.domain.product.repository.ProductSpecification;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
@@ -39,8 +40,8 @@ public class ProductService {
                 .where(ProductSpecification.categoryEquals(condition.category()))
                 .and(ProductSpecification.priceGoe(condition.minPrice()))
                 .and(ProductSpecification.priceLoe(condition.maxPrice()))
-                .and(ProductSpecification.saleStatusEquals(condition.saleStatus()))
-                .and(ProductSpecification.soldOutEquals(condition.soldOut()));
+                .and(ProductSpecification.saleStatusEquals(resolveSaleStatus(condition.saleStatus()))
+                .and(ProductSpecification.soldOutEquals(condition.soldOut())));
 
         Pageable pageable = PageRequest.of(
                 condition.page() -1,
@@ -72,6 +73,17 @@ public class ProductService {
         }
     }
 
+    private SaleStatus resolveSaleStatus(String saleStatus) {
+        if (saleStatus == null) {
+            return null;
+        }
+        try {
+            return SaleStatus.valueOf(saleStatus);
+        } catch (IllegalArgumentException e) {
+            throw  new BusinessException(ErrorCode.INVALID_INPUT, "지원하지 않는 판매 상태입니다: " + saleStatus);
+        }
+    }
+
     private Sort resolveSort(String sort) {
         if (sort == null || sort.equals("latest")) {
             return Sort.by(Sort.Direction.DESC, "createdAt");
@@ -82,7 +94,7 @@ public class ProductService {
         if (sort.equals("priceDesc")) {
             return Sort.by(Sort.Direction.DESC, "price");
         }
-        throw new BusinessException(ErrorCode.INVALID_INPUT, "지원하지 않는 정렬 조건입니다: " + sort);
+        throw new BusinessException(ErrorCode.INVALID_INPUT, "지원하지 않는 정렬 조건입니다: " +sort);
     }
 
 
