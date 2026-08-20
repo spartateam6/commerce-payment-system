@@ -1,4 +1,4 @@
-package io.github.spartateam6.commercepaymentsystem.global.config;
+package io.github.spartateam6.commercepaymentsystem.infra.portone.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
