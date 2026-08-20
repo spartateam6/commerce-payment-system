@@ -276,6 +276,7 @@ VALUES
         'PENDING',
         3
     );
+-- 포인트 5,000 사용 → PG 결제 25,000 → 1% 적립 250
 INSERT INTO point_transactions (member_id, payment_id, transaction_type, amount, created_at, updated_at)
 VALUES (1, 2, 'USE', -5000, NOW(6), NOW(6)),
-       (1, 2, 'EARN', 450, NOW(6), NOW(6));
+       (1, 2, 'EARN', 250, NOW(6), NOW(6));
