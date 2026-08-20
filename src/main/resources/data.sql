@@ -56,7 +56,7 @@ INSERT INTO product (
     created_at,
     updated_at,
     category,
-    descroption,
+    description,
     name,
     price,
     stock,
