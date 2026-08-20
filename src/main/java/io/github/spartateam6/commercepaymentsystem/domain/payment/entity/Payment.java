@@ -47,10 +47,6 @@ public class Payment extends AuditingEntity {
     @Column(name = "status", nullable = false, length = 30)
     private PaymentStatus status;
 
-    @NotNull
-    @Column(name = "earned_point_snapshot", nullable = false)
-    private Integer earnedPointSnapshot;
-
     @Column(name = "portone_payment_id")
     private String portonePaymentId;
 
