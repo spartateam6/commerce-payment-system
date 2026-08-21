@@ -10,6 +10,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentReq
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.repository.PaymentRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.point.service.PointService;
 import io.github.spartateam6.commercepaymentsystem.dummy.MemberFixture;
 import io.github.spartateam6.commercepaymentsystem.dummy.PaymentFixture;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
@@ -46,6 +47,9 @@ class PaymentServiceTest {
 
     @Mock
     private CartService cartService;
+
+    @Mock
+    private PointService pointService;
 
     private static final String ORDER_NUMBER = "ORD-20260814-0001";
     private Long memberId;

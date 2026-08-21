@@ -15,6 +15,8 @@ public class PaymentFixture {
         return Payment.builder()
                 .order(order)
                 .orderAmount(30000)
+                .usedPointAmount(0)
+                .pgAmount(30000)
                 .status(status)
                 .build();
     }
