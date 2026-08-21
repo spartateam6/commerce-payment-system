@@ -67,7 +67,7 @@ public class Member extends AuditingEntity {
         this.pointBalance += changeAmount;
     }
 
-    public void usePoint(Integer amount) {
+    public void validatePointBalance(Integer amount) {
         if (amount == null || amount < 0) {
             throw new BusinessException(ErrorCode.INVALID_POINT_USAGE);
         }
@@ -75,7 +75,5 @@ public class Member extends AuditingEntity {
         if (pointBalance < amount) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
         }
-
-        pointBalance -= amount;
     }
 }

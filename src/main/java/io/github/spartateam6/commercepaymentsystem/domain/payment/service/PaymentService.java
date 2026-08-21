@@ -89,11 +89,9 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.PAYMENT_ALREADY_EXISTS);
         }
 
-        Integer pgPaymentAmount = order.calculatePgPaymentAmount();
-
         Payment payment = Payment.builder()
                 .order(order)
-                .orderAmount(pgPaymentAmount)
+                .orderAmount(order.getTotalAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
 

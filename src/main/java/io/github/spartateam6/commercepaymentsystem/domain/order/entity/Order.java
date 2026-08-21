@@ -134,8 +134,4 @@ public class Order extends AuditingEntity {
 
         status = target;
     }
-
-    public Integer calculatePgPaymentAmount() {
-        return totalAmount - pointUsedAmount;
-    }
 }

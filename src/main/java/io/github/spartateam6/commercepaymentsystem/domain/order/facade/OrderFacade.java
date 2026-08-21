@@ -132,9 +132,9 @@ public class OrderFacade {
         // 주문 예정 정보 계산
         PreparedOrder preparedOrder = prepareOrder(cartItems, reservedProducts);
 
-        // 포인트 검증 및 차감
+        // 포인트 사용 여부만 검증
         validatePointUsage(request.pointToUse(), preparedOrder.totalAmount());
-        member.usePoint(request.pointToUse());
+        member.validatePointBalance(request.pointToUse());
 
         List<OrderService.CreateOrderItem> createItems = preparedOrder.items()
                 .stream()
