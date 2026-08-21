@@ -99,7 +99,7 @@ public class PaymentService {
         pointService.applyPaymentPoint(
                 memberId,
                 payment,
-                payment.getUsedPointAmount(),
+                order.getPointUsedAmount(),
                 payment.getPgAmount()
         );
 
