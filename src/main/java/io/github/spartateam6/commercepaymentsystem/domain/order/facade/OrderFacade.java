@@ -14,6 +14,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStat
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
@@ -146,9 +147,9 @@ public class OrderFacade {
         // 주문과 주문상품 생성
         Order savedOrder = orderService.createOrder(member, generateOrderNumber(), request.pointToUse(), createItems);
 
-        paymentService.createPendingPayment(savedOrder);
+        Payment payment = paymentService.createPendingPayment(savedOrder);
 
-        return OrderCreateResponse.from(savedOrder);
+        return OrderCreateResponse.from(savedOrder, payment);
     }
 
     @Transactional(readOnly = true)

@@ -115,7 +115,7 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void createPendingPayment(Order order) {
+    public Payment createPendingPayment(Order order) {
         if (paymentRepository.existsByOrder_Id(order.getId())) {
             throw new BusinessException(ErrorCode.PAYMENT_ALREADY_EXISTS);
         }
@@ -127,7 +127,7 @@ public class PaymentService {
                 .status(PaymentStatus.PENDING)
                 .build();
 
-        paymentRepository.save(payment);
+        return paymentRepository.save(payment);
     }
 
 
