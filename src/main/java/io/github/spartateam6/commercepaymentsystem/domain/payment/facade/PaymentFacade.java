@@ -27,6 +27,13 @@ public class PaymentFacade {
     ) {
         PaymentDto paymentDto = paymentService.validPayment(memberId, paymentRequestDto);
 
+        // 포인트로 전액 결제하면 PG를 안거치도록한다.
+        if (paymentDto.pgAmount() == 0){
+            paymentService.successPayment(memberId, paymentRequestDto.orderNumber(), 0L);
+
+            return PaymentConfirmResponseDto.success(paymentDto);
+        }
+
         PaymentGatewayResponse pgPayment = paymentGateway.getPayment(paymentDto.portonePaymentId());
 
         boolean isPaid = pgPayment.isPaid();
