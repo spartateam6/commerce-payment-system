@@ -269,14 +269,17 @@ INSERT INTO payment (
     updated_at,
     order_amount,
     pg_amount,
+    portone_payment_id,
     completed_at,
     status,
     order_id
 )
 VALUES
-    (1, NOW(6), NOW(6), 30000, 30000, NULL, 'PENDING', 1),
-    (2, NOW(6), NOW(6), 30000, 25000, NOW(6), 'PAID', 2),
-    (3, NOW(6), NOW(6), 12000, 12000, NULL, 'PENDING', 3);
+    (1, NOW(6), NOW(6), 30000, 30000, "123", NULL, 'PENDING', 1),
+    (2, NOW(6), NOW(6), 30000, 25000, "234", NOW(6), 'PAID', 2),
+    (3, NOW(6), NOW(6), 12000, 12000, "456", NULL, 'PENDING', 3);
+
+-- ---------------------------------------------------------
 -- ---------------------------------------------------------
 -- 8. POINT_TRANSACTION (원장)
 -- 잔액 == SUM(amount)가 항상 성립하도록 초기 지급도 원장에 남긴다.
