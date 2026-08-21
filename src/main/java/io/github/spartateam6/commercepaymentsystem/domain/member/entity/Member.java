@@ -1,6 +1,8 @@
 package io.github.spartateam6.commercepaymentsystem.domain.member.entity;
 
+import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.entity.AuditingEntity;
+import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
@@ -61,5 +63,15 @@ public class Member extends AuditingEntity {
 
     public void changePoint(int changeAmount) {
         this.pointBalance += changeAmount;
+    }
+
+    public void validatePointBalance(Integer amount) {
+        if (amount == null || amount < 0) {
+            throw new BusinessException(ErrorCode.INVALID_POINT_USAGE);
+        }
+
+        if (pointBalance < amount) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
+        }
     }
 }

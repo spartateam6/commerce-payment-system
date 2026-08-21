@@ -55,7 +55,11 @@ class PaymentServiceTest {
     }
 
     private Order createOrder(OrderStatus status, int totalAmount) {
-        Order order = Order.create(MemberFixture.members.get(0), ORDER_NUMBER);
+        return createOrder(status, totalAmount, 0);
+    }
+
+    private Order createOrder(OrderStatus status, int totalAmount, int pointUsedAmount) {
+        Order order = Order.create(MemberFixture.members.get(0), ORDER_NUMBER, pointUsedAmount);
         ReflectionTestUtils.setField(order, "totalAmount", totalAmount);
         if (status != OrderStatus.PAYMENT_PENDING) {
             ReflectionTestUtils.setField(order, "status", status);

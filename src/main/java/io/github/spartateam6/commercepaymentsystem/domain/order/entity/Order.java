@@ -1,5 +1,4 @@
 package io.github.spartateam6.commercepaymentsystem.domain.order.entity;
-
 import io.github.spartateam6.commercepaymentsystem.domain.member.entity.Member;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
@@ -25,13 +24,11 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.*;
 
-import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_MEMBER_ID_REQUIRED;
-import static io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode.ORDER_NUMBER_REQUIRED;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -68,6 +65,9 @@ public class Order extends AuditingEntity {
     @Column(name = "total_amount", nullable = false)
     private Integer totalAmount;
 
+    @Column(name = "point_used_amount", nullable = false, columnDefinition = "integer default 0")
+    private Integer pointUsedAmount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private OrderStatus status;
@@ -76,7 +76,7 @@ public class Order extends AuditingEntity {
     @OrderBy("id ASC")
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public static Order create(Member member, String orderNumber) {
+    public static Order create(Member member, String orderNumber, Integer pointUsedAmount) {
         if (member == null) {
             throw new BusinessException(ORDER_MEMBER_ID_REQUIRED);
         }
@@ -85,10 +85,15 @@ public class Order extends AuditingEntity {
             throw new BusinessException(ORDER_NUMBER_REQUIRED);
         }
 
+        if (pointUsedAmount == null || pointUsedAmount < 0) {
+            throw new BusinessException(INVALID_POINT_USAGE);
+        }
+
         Order order = new Order();
         order.member = member;
         order.orderNumber = orderNumber;
         order.totalAmount = 0;
+        order.pointUsedAmount = pointUsedAmount;
         order.status = OrderStatus.PAYMENT_PENDING;
         return order;
     }
