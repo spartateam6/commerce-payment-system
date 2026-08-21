@@ -29,13 +29,19 @@ public class PaymentFacade {
 
         PaymentGatewayResponse pgPayment = paymentGateway.getPayment(paymentDto.portonePaymentId());
 
-        // 가격 검증
         boolean isPaid = pgPayment.isPaid();
-        boolean priceOk =
-                pgPayment.totalAmount() != null &&
-                        pgPayment.totalAmount().equals(paymentDto.orderAmount().longValue());
+        boolean priceOk = pgPayment.totalAmount() != null &&
+                pgPayment.totalAmount().equals(paymentDto.pgAmount().longValue());
 
-        if (!isPaid || !priceOk) {
+        if (!isPaid) {
+            // PG 미승인 — 실제 카드 승인이 없으므로 보상 취소 없이 바로 실패 처리
+            paymentService.failPayment(paymentRequestDto.orderNumber());
+            return PaymentConfirmResponseDto.fail();
+        }
+
+        if (!priceOk) {
+            // PG 승인됐지만 금액 불일치 — 보상 취소 후 실패 처리
+            paymentGateway.cancelPayment(paymentDto.portonePaymentId(), "결제 금액 불일치");
             paymentService.failPayment(paymentRequestDto.orderNumber());
             return PaymentConfirmResponseDto.fail();
         }

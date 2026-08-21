@@ -165,7 +165,7 @@ class PaymentServiceTest {
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
         void failPayment_결제정보없음_예외발생() {
             // given
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
@@ -180,7 +180,7 @@ class PaymentServiceTest {
             Payment payment = PaymentFixture.createPayment(); // PENDING
             Order order = payment.getOrder(); // PAYMENT_PENDING
 
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
             willDoNothing().given(orderItemService).restoreOrderProductStock(any());
 
             // when
@@ -202,7 +202,7 @@ class PaymentServiceTest {
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
         void successPayment_결제정보없음_예외발생() {
             // given
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
@@ -217,7 +217,7 @@ class PaymentServiceTest {
             Payment payment = PaymentFixture.createPayment(); // PENDING
             Order order = payment.getOrder(); // PAYMENT_PENDING
 
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
             willDoNothing().given(cartService).clearCart(memberId);
 
             // when
@@ -240,7 +240,7 @@ class PaymentServiceTest {
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
         void cancelByOrder_결제정보없음_예외발생() {
             // given
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
@@ -253,7 +253,7 @@ class PaymentServiceTest {
         void cancelByOrder_결제전취소_성공() {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PENDING);
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
 
             // when
             assertDoesNotThrow(() -> paymentService.cancelByOrder(ORDER_NUMBER, PaymentStatus.FAILED));
@@ -267,7 +267,7 @@ class PaymentServiceTest {
         void cancelByOrder_결제후환불_성공() {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
 
             // when
             assertDoesNotThrow(() -> paymentService.cancelByOrder(ORDER_NUMBER, PaymentStatus.REFUND));

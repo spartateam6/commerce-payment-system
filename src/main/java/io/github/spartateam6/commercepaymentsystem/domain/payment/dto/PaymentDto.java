@@ -13,6 +13,7 @@ public record PaymentDto(
         LocalDateTime updatedAt,
         Long id,
         Integer orderAmount,
+        Integer pgAmount,
         PaymentStatus status,
         String portonePaymentId,
         LocalDateTime completedAt
@@ -24,6 +25,7 @@ public record PaymentDto(
             .updatedAt(payment.getUpdatedAt())
             .id(payment.getId())
             .orderAmount(payment.getOrderAmount())
+            .pgAmount(payment.getPgAmount())
             .status(payment.getStatus())
             .portonePaymentId(payment.getPortonePaymentId())
             .completedAt(payment.getCompletedAt())

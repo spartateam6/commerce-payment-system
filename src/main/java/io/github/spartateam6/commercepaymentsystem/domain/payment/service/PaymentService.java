@@ -57,34 +57,49 @@ public class PaymentService {
 
     @Transactional
     public void failPayment(String orderNumber) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        Order order = payment.getOrder();
 
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.FAILED) {
+            return;
+        }
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+        }
+
+        Order order = payment.getOrder();
         payment.changeStatus(PaymentStatus.FAILED);
         order.updateStatus(OrderStatus.CANCELLED);
         // 차감한 재고 복구
         orderItemService.restoreOrderProductStock(order.getId());
-
         paymentRepository.save(payment);
     }
 
     @Transactional
     public void successPayment(Long memberId, String orderNumber, Long pgAmount) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
-        Order order = payment.getOrder();
 
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            return;
+        }
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+        }
+
+        Order order = payment.getOrder();
         payment.changeStatus(PaymentStatus.PAID, pgAmount.intValue());
         order.updateStatus(OrderStatus.CONFIRMED);
         cartService.clearCart(memberId);
-
         paymentRepository.save(payment);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void cancelByOrder(String orderNumber, PaymentStatus target) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
         payment.changeStatus(target);
