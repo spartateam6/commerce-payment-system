@@ -14,41 +14,175 @@ on:
       - '**/*.png'
       - '**/*.jpg'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build & Test
     # github가 제공하는 우분트 가상머신에서 실행
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       # 1.저장소 코드를 가상머신으로 받는 단계
       # 없으면 코드가 없어서 암것도못함
-    - name: 소스 체크아웃
-      uses: actions/checkout@v7
+      - name: 소스 체크아웃
+        uses: actions/checkout@v7
 
-    # 2. 자바설치
-    # build.gradle의 Java 설정과 CI의 JDK 버전이 일치하도록 직접 맞춰놓는다
-    # GitHub Actions 환경에서도 프로젝트와 동일한 JDK 17을 사용하기 위해 Temurin JDK 17을 설치.
-    # 로컬과 CI의 JDK 버전이 다르면 로컬에서는 정상 동작하지만 CI에서 빌드가 실패할 수 있음
-    - name: JDK 17 설정
-      uses: actions/setup-java@v5
-      with:
-        distribution: temurin
-        java-version: '17'
+      # 2. 자바설치
+      # build.gradle의 Java 설정과 CI의 JDK 버전이 일치하도록 직접 맞춰놓는다
+      # GitHub Actions 환경에서도 프로젝트와 동일한 JDK 17을 사용하기 위해 Temurin JDK 17을 설치.
+      # 로컬과 CI의 JDK 버전이 다르면 로컬에서는 정상 동작하지만 CI에서 빌드가 실패할 수 있음
+      - name: JDK 17 설정
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  # 3.gradle 캐시 설정
-  # 없으면 ci 돌릴때 매번 다운로드해서 ci 실행 느려짐
-    - name: Gradle 캐시설정
-      uses: gradle/actions/setup-gradle@v6
+      # 3.gradle 캐시 설정
+      # 없으면 ci 돌릴때 매번 다운로드해서 ci 실행 느려짐
+      - name: Gradle 캐시설정
+        uses: gradle/actions/setup-gradle@v6
 
-  # 4.gradlew 실행 권한 부여
-  # 깃에 파일 실행권한이 없으면 막힘
-    - name: gradlew 실행 권한 부여
-      run: chmod +x gradlew
+      # 4.gradlew 실행 권한 부여
+      # 깃에 파일 실행권한이 없으면 막힘
+      - name: gradlew 실행 권한 부여
+        run: chmod +x gradlew
 
-  # 1단계: 컴파일 확인===
-    - name: 컴파일 확인
-      run: ./gradlew compileJava compileTestJava --console=plain
+      # 1단계: 컴파일 확인===
+      - name: 컴파일 확인
+        run: ./gradlew clean compileJava compileTestJava --console=plain
+
+      - name: Build & Test
+        run: ./gradlew test jacocoTestReport --console=plain
+
+      - name: JaCoCo Coverage Summary
+        if: always()
+        run: |
+          python3 <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          
+          report = "build/reports/jacoco/test/jacocoTestReport.xml"
+          
+          if not os.path.exists(report):
+              print("JaCoCo XML report not found")
+              raise SystemExit(0)
+          
+          root = ET.parse(report).getroot()
+          
+          def get_coverage(element, counter_type):
+              counter = element.find(f"counter[@type='{counter_type}']")
+          
+              if counter is None:
+                  return None
+          
+              missed = int(counter.attrib["missed"])
+              covered = int(counter.attrib["covered"])
+              total = missed + covered
+          
+              if total == 0:
+                  return 100.0
+          
+              return covered / total * 100
+          
+          
+          def badge(value):
+              if value is None:
+                  return "-"
+          
+              if value >= 80:
+                  return f"🟢 {value:.1f}%"
+              elif value >= 70:
+                  return f"🟡 {value:.1f}%"
+              else:
+                  return f"🔴 {value:.1f}%"
+          
+          
+          # ================================
+          # 전체 Coverage
+          # ================================
+          
+          overall_line = get_coverage(root, "LINE")
+          overall_branch = get_coverage(root, "BRANCH")
+          
+          
+          # ================================
+          # Service 클래스 Coverage
+          # ================================
+          
+          services = []
+          
+          for package in root.findall("package"):
+              package_name = package.attrib["name"]
+          
+              for clazz in package.findall("class"):
+                  class_name = clazz.attrib["name"]
+                  simple_name = class_name.split("/")[-1]
+          
+                  # Service 클래스만 출력
+                  if not simple_name.endswith("Service"):
+                      continue
+          
+                  # 내부 클래스 제외
+                  if "$" in simple_name:
+                      continue
+          
+                  line = get_coverage(clazz, "LINE")
+                  branch = get_coverage(clazz, "BRANCH")
+          
+                  services.append({
+                      "name": simple_name,
+                      "package": package_name.replace("/", "."),
+                      "line": line,
+                      "branch": branch
+                  })
+          
+          
+          # LINE Coverage 낮은 순
+          services.sort(
+              key=lambda x: x["line"] if x["line"] is not None else 100
+          )
+          
+          
+          # ================================
+          # GitHub Summary 작성
+          # ================================
+          
+          summary = os.environ["GITHUB_STEP_SUMMARY"]
+          
+          with open(summary, "a") as f:
+          
+              f.write("# 📊 JaCoCo Coverage Report\n\n")
+          
+              # Overall
+              f.write("## Overall Coverage\n\n")
+              f.write("| Metric | Coverage |\n")
+              f.write("|---|---:|\n")
+              f.write(f"| Lines | **{badge(overall_line)}** |\n")
+              f.write(f"| Branches | **{badge(overall_branch)}** |\n")
+          
+              # Service
+              f.write("\n## Service Coverage\n\n")
+          
+              if not services:
+                  f.write("_Service classes not found._\n")
+              else:
+                  f.write("| Service | Line | Branch |\n")
+                  f.write("|---|---:|---:|\n")
+          
+                  for service in services:
+                      f.write(
+                          f"| `{service['name']}` "
+                          f"| {badge(service['line'])} "
+                          f"| {badge(service['branch'])} |\n"
+                      )
+          PY
 
   #=========여기부터는 밑에서부터는 나중에 협의 후에 추가=======
 
