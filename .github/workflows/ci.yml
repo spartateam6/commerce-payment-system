@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,7 +25,6 @@ concurrency:
 jobs:
   build:
     name: Build & Test
-    # github가 제공하는 우분트 가상머신에서 실행
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -184,5 +184,28 @@ jobs:
                       )
           PY
 
+  docker:
+    name: Docker Build & Push
+    needs: build
+    # pr 머지 되었을 때만 실행
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev')
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}-${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Docker 이미지 빌드
-        run: docker build -t commerce-payment-system:${{ github.sha }} .
+        run: docker build -t "${DOCKER_IMAGE}" .
+
+      - name: Docker 이미지 업로드
+        run: docker push "${DOCKER_IMAGE}"
