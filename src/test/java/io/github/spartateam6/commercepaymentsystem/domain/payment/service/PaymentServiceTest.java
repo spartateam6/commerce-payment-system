@@ -127,8 +127,10 @@ class PaymentServiceTest {
         @DisplayName("이미 처리된 결제이면 ALREADY_PROCESSED_PAYMENT 예외가 발생한다")
         void validPayment_이미처리된결제_예외발생() {
             // given
-            Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
-            Order order = createOrder(OrderStatus.CONFIRMED, 30000);
+            // PAID+CONFIRMED 조합은 멱등성 처리로 예외 없이 반환되므로,
+            // 실제로 ALREADY_PROCESSED_PAYMENT를 유발하는 FAILED 상태를 사용한다.
+            Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.FAILED);
+            Order order = createOrder(OrderStatus.CANCELLED, 30000);
             PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
