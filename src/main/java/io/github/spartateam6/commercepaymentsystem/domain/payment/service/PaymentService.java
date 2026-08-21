@@ -93,7 +93,7 @@ public class PaymentService {
                 .order(order)
                 .orderAmount(order.getTotalAmount())
                 .usedPointAmount(order.getPointUsedAmount())
-                .pgAmount(order.getTotalAmount())
+                .pgAmount(order.getTotalAmount() - order.getPointUsedAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
 
