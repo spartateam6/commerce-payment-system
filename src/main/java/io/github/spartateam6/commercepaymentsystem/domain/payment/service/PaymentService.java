@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
@@ -31,60 +32,86 @@ public class PaymentService {
     private final CartService cartService;
     private final PointService pointService;
 
-    @Transactional
-    public void requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
+    public PaymentDto validPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
         Payment payment = paymentRepository.findByOrderNumberWithOrder(paymentRequestDto.orderNumber())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
         Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
-        // 결제 금액 검증
-        // 프론트에서 넘어온 가격 == DB 가격 ?
+        // 이미 완료된 결제 — Facade에서 idempotent 200 응답 처리
+        if (payment.getStatus() == PaymentStatus.PAID && order.getStatus() == OrderStatus.CONFIRMED) {
+            return PaymentDto.from(payment);
+        }
+
+        // 결제 금액 검증 (프론트에서 넘어온 가격 == DB 가격)
         if (!payment.getOrderAmount().equals(paymentRequestDto.price())) {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
         // 주문 상태 검증
-        if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
+        if (payment.getStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING) {
             throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
         }
 
-        // TODO: 결제 요청 로직 (Portone)
-        // ...
+        return PaymentDto.from(payment);
+    }
 
-        // 결제 실패
-        if (paymentRequestDto.result() == PaymentRequestDto.PaymentResult.FAIL) {
-            payment.changeStatus(PaymentStatus.FAILED);
-            // 차감한 재고 복구
-            orderItemService.restoreOrderProductStock(order.getId());
-            order.updateStatus(OrderStatus.CANCELLED);
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
+    @Transactional
+    public void failPayment(String orderNumber) {
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.FAILED) {
+            return;
+        }
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
         }
 
-        payment.changeStatus(PaymentStatus.PAID);
+        Order order = payment.getOrder();
+        payment.changeStatus(PaymentStatus.FAILED);
+        order.updateStatus(OrderStatus.CANCELLED);
+        // 차감한 재고 복구
+        orderItemService.restoreOrderProductStock(order.getId());
         paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public void successPayment(Long memberId, String orderNumber, Long pgAmount) {
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            return;
+        }
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+        }
+
+        Order order = payment.getOrder();
+        payment.changeStatus(PaymentStatus.PAID, pgAmount.intValue());
         order.updateStatus(OrderStatus.CONFIRMED);
 
         pointService.applyPaymentPoint(
                 memberId,
                 payment,
-                payment.getUsedPointAmount(),
+                order.getPointUsedAmount(),
                 payment.getPgAmount()
         );
 
         cartService.clearCart(memberId);
+        paymentRepository.save(payment);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void cancelByOrder(String orderNumber, PaymentStatus target) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+    public void cancelPendingByOrder(String orderNumber) {
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        payment.changeStatus(target);
-        if (target == PaymentStatus.REFUND && !MockData.refundPortone()) {
-            // TODO: 실 결제 Portone 붙일 때 webhook 으로 처리
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
-        }
+        payment.changeStatus(PaymentStatus.FAILED);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -96,7 +123,6 @@ public class PaymentService {
         Payment payment = Payment.builder()
                 .order(order)
                 .orderAmount(order.getTotalAmount())
-                .usedPointAmount(order.getPointUsedAmount())
                 .pgAmount(order.getTotalAmount() - order.getPointUsedAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
@@ -109,19 +135,4 @@ public class PaymentService {
     public Optional<PaymentForOrderResponse> findByOrderId(Long orderId) {
         return paymentRepository.findByOrder_Id(orderId).map(PaymentForOrderResponse::from);
     }
-
-
-    // TODO: replace Mock data to real data
-    static class MockData {
-        // TODO: Portone 을 추가할 때 webhook 으로 오류처리 (재시도 및 알림)
-        // ...
-        private static boolean processPortone() {
-            return true;
-        }
-
-        private static boolean refundPortone() {
-            return true;
-        }
-    }
-
 }

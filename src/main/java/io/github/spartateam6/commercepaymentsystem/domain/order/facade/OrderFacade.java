@@ -11,7 +11,6 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreview
 import io.github.spartateam6.commercepaymentsystem.domain.order.dto.OrderPreviewResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
-import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
@@ -57,14 +56,12 @@ public class OrderFacade {
             throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
         }
 
-        PaymentStatus targetPaymentStatus = switch (order.getStatus()) {
-            case PAYMENT_PENDING -> PaymentStatus.FAILED;
-            case CONFIRMED       -> PaymentStatus.REFUND;
-            case CANCELLED -> throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
-        };
+        if (order.getStatus() != OrderStatus.PAYMENT_PENDING) {
+            throw new BusinessException(ErrorCode.ORDER_REFUND_REQUIRED);
+        }
 
         order.updateStatus(OrderStatus.CANCELLED);
-        paymentService.cancelByOrder(order.getOrderNumber(), targetPaymentStatus);
+        paymentService.cancelPendingByOrder(order.getOrderNumber());
         orderItemService.restoreOrderProductStock(orderId);
     }
 
