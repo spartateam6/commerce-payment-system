@@ -50,6 +50,12 @@ public class Payment extends AuditingEntity {
     @Column(name = "portone_payment_id")
     private String portonePaymentId;
 
+    @Column(name = "used_point_amount", nullable = false)
+    private Integer usedPointAmount;
+
+    @Column(name = "pg_amount", nullable = false)
+    private Integer pgAmount;
+
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
@@ -57,10 +63,14 @@ public class Payment extends AuditingEntity {
     public Payment(
         Order order,
         Integer orderAmount,
+        Integer usedPointAmount,
+        Integer pgAmount,
         PaymentStatus status
     ) {
         this.order = order;
         this.orderAmount = orderAmount;
+        this.usedPointAmount = usedPointAmount;
+        this.pgAmount = pgAmount;
         this.status = status;
         this.completedAt = null;
     }
