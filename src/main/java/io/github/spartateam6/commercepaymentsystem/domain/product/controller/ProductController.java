@@ -1,7 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.product.controller;
 
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.request.ProductSearchCondition;
-import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.PageResponse;
+import io.github.spartateam6.commercepaymentsystem.global.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.SaleStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.product.service.ProductService;

@@ -44,16 +44,6 @@ public class Product extends AuditingEntity {
     @Column(name = "sale_status", nullable = false, length = 20)
     private SaleStatus saleStatus;
 
-    public void deductStock(int quantity) {
-        if (this.stock < quantity) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
-        }
-        this.stock -= quantity;
-    }
-    public void increaseStock(int quantity) {
-        this.stock += quantity;
-    }
-
     @NotNull
     @Lob
     @Column(name = "description", nullable = false)
