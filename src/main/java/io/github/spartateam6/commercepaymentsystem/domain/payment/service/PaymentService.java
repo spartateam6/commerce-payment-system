@@ -10,6 +10,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentReq
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.repository.PaymentRepository;
+import io.github.spartateam6.commercepaymentsystem.domain.point.service.PointService;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class PaymentService {
     private final OrderService orderService;
     private final OrderItemService orderItemService;
     private final CartService cartService;
+    private final PointService pointService;
 
     @Transactional
     public boolean requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
@@ -65,6 +67,13 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         order.updateStatus(OrderStatus.CONFIRMED);
+
+        pointService.applyPaymentPoint(
+                memberId,
+                payment,
+                payment.getUsedPointAmount(),
+                payment.getPgAmount()
+        );
 
         cartService.clearCart(memberId);
 
