@@ -26,17 +26,8 @@ public class PaymentController {
     ) {}
 
     @PostMapping("/confirm")
-    public ApiResponse<PaymentResponse> confirmPayment(
-            @Valid @RequestBody PaymentRequestDto paymentRequestDto,
-            @MemberId Long memberId
-    ) {
-        boolean success = paymentService.requestPayment(memberId, paymentRequestDto);
-
-        if (!success) {
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
-        }
-
+    public ApiResponse<PaymentResponse> confirmPayment(@Valid @RequestBody PaymentRequestDto dto, @MemberId Long memberId) {
+        paymentService.requestPayment(memberId, dto);
         return ApiResponse.ok(new PaymentResponse("ok"));
     }
-
 }

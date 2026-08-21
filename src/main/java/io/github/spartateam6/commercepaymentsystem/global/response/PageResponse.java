@@ -1,4 +1,4 @@
-package io.github.spartateam6.commercepaymentsystem.domain.product.dto.response;
+package io.github.spartateam6.commercepaymentsystem.global.response;
 
 import org.springframework.data.domain.Page;
 

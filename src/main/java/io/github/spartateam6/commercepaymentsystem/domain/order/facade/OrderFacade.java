@@ -60,7 +60,7 @@ public class OrderFacade {
         PaymentStatus targetPaymentStatus = switch (order.getStatus()) {
             case PAYMENT_PENDING -> PaymentStatus.FAILED;
             case CONFIRMED       -> PaymentStatus.REFUND;
-            default -> throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
+            case CANCELLED -> throw new BusinessException(ErrorCode.ALREADY_ORDER_CANCELED);
         };
 
         order.updateStatus(OrderStatus.CANCELLED);

@@ -32,7 +32,7 @@ public class PaymentService {
     private final PointService pointService;
 
     @Transactional
-    public boolean requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
+    public void requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
         Payment payment = paymentRepository.findByOrderNumberWithOrder(paymentRequestDto.orderNumber())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
@@ -57,16 +57,14 @@ public class PaymentService {
             payment.changeStatus(PaymentStatus.FAILED);
             // 차감한 재고 복구
             orderItemService.restoreOrderProductStock(order.getId());
-
             order.updateStatus(OrderStatus.CANCELLED);
-
-            return false;
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
         }
 
         payment.changeStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
-
         order.updateStatus(OrderStatus.CONFIRMED);
+        cartService.clearCart(memberId);
 
         pointService.applyPaymentPoint(
                 memberId,
@@ -76,8 +74,6 @@ public class PaymentService {
         );
 
         cartService.clearCart(memberId);
-
-        return true;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

@@ -95,37 +95,28 @@ public class CartService {
             throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.CART_ITEM_NOT_FOUND
-                ));
-
-        if (!cartItem.getCart().getMember().getId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
-
+        CartItem cartItem = getOwnedCartItem(memberId, cartItemId);
         if (request.quantity() > cartItem.getProduct().getStock()) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
         }
-
         cartItem.changeQuantity(request.quantity());
-
         return CartItemResponse.from(cartItem);
     }
 
     @Transactional
     public void deleteItem(Long memberId, Long cartItemId) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.CART_ITEM_NOT_FOUND
-                ));
+        cartItemRepository.delete(getOwnedCartItem(memberId, cartItemId));
+    }
 
+    private CartItem getOwnedCartItem(Long memberId, Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
         if (!cartItem.getCart().getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
-
-        cartItemRepository.delete(cartItem);
+        return cartItem;
     }
+
 
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
