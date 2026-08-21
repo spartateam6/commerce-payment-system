@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
@@ -68,28 +69,28 @@ class PaymentServiceTest {
     }
 
     @Nested
-    @DisplayName("결제 요청 (requestPayment)")
-    class RequestPayment {
+    @DisplayName("결제 유효성 검사 (validPayment)")
+    class ValidPayment {
 
         @Test
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
-        void requestPayment_결제정보없음_예외발생() {
+        void validPayment_결제정보없음_예외발생() {
             // given
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, PaymentRequestDto.PaymentResult.SUCCESS);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, "portone_id_123");
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.requestPayment(memberId, dto));
+                    () -> paymentService.validPayment(memberId, dto));
             assertEquals(ErrorCode.PAYMENT_NOT_FOUND, ex.getErrorCode());
         }
 
         @Test
         @DisplayName("다른 회원의 주문이면 ORDER_NOT_FOUND 예외가 발생한다")
-        void requestPayment_소유권불일치_예외발생() {
+        void validPayment_소유권불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment();
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, PaymentRequestDto.PaymentResult.SUCCESS);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, 2L))
@@ -97,61 +98,149 @@ class PaymentServiceTest {
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.requestPayment(2L, dto));
+                    () -> paymentService.validPayment(2L, dto));
             assertEquals(ErrorCode.ORDER_NOT_FOUND, ex.getErrorCode());
         }
 
         @Test
         @DisplayName("결제 금액이 주문 금액과 다르면 PAYMENT_AMOUNT_MISMATCH 예외가 발생한다")
-        void requestPayment_금액불일치_예외발생() {
+        void validPayment_금액불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment(); // amount = 30000
             Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 99999, PaymentRequestDto.PaymentResult.SUCCESS); // dto.price != payment.amount
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 99999, payment.getPortonePaymentId());
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.requestPayment(memberId, dto));
+                    () -> paymentService.validPayment(memberId, dto));
             assertEquals(ErrorCode.PAYMENT_AMOUNT_MISMATCH, ex.getErrorCode());
         }
 
         @Test
         @DisplayName("이미 처리된 결제이면 ALREADY_PROCESSED_PAYMENT 예외가 발생한다")
-        void requestPayment_이미처리된결제_예외발생() {
+        void validPayment_이미처리된결제_예외발생() {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
             Order order = createOrder(OrderStatus.CONFIRMED, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, PaymentRequestDto.PaymentResult.SUCCESS);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.requestPayment(memberId, dto));
+                    () -> paymentService.validPayment(memberId, dto));
             assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, ex.getErrorCode());
         }
 
         @Test
-        @DisplayName("결제 상태가 PENDING이고 주문 정보가 일치하면 결제에 성공한다")
-        void requestPayment_성공() {
+        @DisplayName("portonePaymentId가 일치하지 않으면 PAYMENT_NOT_MATCH_ORDER 예외가 발생한다")
+        void validPayment_portoneId불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment(); // PENDING, amount=30000
             Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, PaymentRequestDto.PaymentResult.SUCCESS);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, "wrong_portone_id");
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
+
+            // when & then
+            BusinessException ex = assertThrows(BusinessException.class,
+                    () -> paymentService.validPayment(memberId, dto));
+            assertEquals(ErrorCode.PAYMENT_NOT_MATCH_ORDER, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("결제 상태가 PENDING이고 모든 정보가 일치하면 PaymentDto를 반환한다")
+        void validPayment_성공() {
+            // given
+            Payment payment = PaymentFixture.createPayment(); // PENDING, amount=30000
+            Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
+
+            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
+
+            // when
+            PaymentDto result = paymentService.validPayment(memberId, dto);
+
+            // then
+            assertNotNull(result);
+            assertEquals(PaymentStatus.PENDING, result.status());
+            assertEquals(30000, result.orderAmount());
+        }
+    }
+
+    @Nested
+    @DisplayName("결제 실패 처리 (failPayment)")
+    class FailPaymentTest {
+
+        @Test
+        @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
+        void failPayment_결제정보없음_예외발생() {
+            // given
+            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
+
+            // when & then
+            BusinessException ex = assertThrows(BusinessException.class,
+                    () -> paymentService.failPayment(ORDER_NUMBER));
+            assertEquals(ErrorCode.PAYMENT_NOT_FOUND, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("결제 실패 시 Payment는 FAILED, Order는 CANCELLED 상태가 되고 재고가 복구된다")
+        void failPayment_성공() {
+            // given
+            Payment payment = PaymentFixture.createPayment(); // PENDING
+            Order order = payment.getOrder(); // PAYMENT_PENDING
+
+            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
+            willDoNothing().given(orderItemService).restoreOrderProductStock(any());
+
+            // when
+            paymentService.failPayment(ORDER_NUMBER);
+
+            // then
+            assertEquals(PaymentStatus.FAILED, payment.getStatus());
+            assertEquals(OrderStatus.CANCELLED, order.getStatus());
+            then(orderItemService).should().restoreOrderProductStock(order.getId());
+            then(paymentRepository).should().save(payment);
+        }
+    }
+
+    @Nested
+    @DisplayName("결제 성공 처리 (successPayment)")
+    class SuccessPaymentTest {
+
+        @Test
+        @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
+        void successPayment_결제정보없음_예외발생() {
+            // given
+            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
+
+            // when & then
+            BusinessException ex = assertThrows(BusinessException.class,
+                    () -> paymentService.successPayment(memberId, ORDER_NUMBER, 30000L));
+            assertEquals(ErrorCode.PAYMENT_NOT_FOUND, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("결제 성공 시 Payment는 PAID, Order는 CONFIRMED 상태가 되고 장바구니가 비워진다")
+        void successPayment_성공() {
+            // given
+            Payment payment = PaymentFixture.createPayment(); // PENDING
+            Order order = payment.getOrder(); // PAYMENT_PENDING
+
+            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             willDoNothing().given(cartService).clearCart(memberId);
 
             // when
-            boolean result = paymentService.requestPayment(memberId, dto);
+            paymentService.successPayment(memberId, ORDER_NUMBER, 30000L);
 
             // then
-            assertTrue(result);
             assertEquals(PaymentStatus.PAID, payment.getStatus());
             assertNotNull(payment.getCompletedAt());
             assertEquals(OrderStatus.CONFIRMED, order.getStatus());

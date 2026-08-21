@@ -12,9 +12,8 @@ public record PaymentRequestDto(
         @Min(1)
         Integer price,
 
-        @NotNull PaymentResult result
+        @NotBlank
+        String portonePaymentId
 
 ) {
-
-        public enum PaymentResult{ SUCCESS, FAIL }
 }

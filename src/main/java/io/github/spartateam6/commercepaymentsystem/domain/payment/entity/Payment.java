@@ -20,7 +20,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
@@ -50,10 +52,7 @@ public class Payment extends AuditingEntity {
     @Column(name = "portone_payment_id")
     private String portonePaymentId;
 
-    @Column(name = "used_point_amount", nullable = false)
-    private Integer usedPointAmount;
-
-    @Column(name = "pg_amount", nullable = false)
+    @Column(name = "pg_amount")
     private Integer pgAmount;
 
     @Column(name = "completed_at")
@@ -63,26 +62,40 @@ public class Payment extends AuditingEntity {
     public Payment(
         Order order,
         Integer orderAmount,
-        Integer usedPointAmount,
         Integer pgAmount,
         PaymentStatus status
     ) {
         this.order = order;
         this.orderAmount = orderAmount;
-        this.usedPointAmount = usedPointAmount;
         this.pgAmount = pgAmount;
         this.status = status;
+        this.portonePaymentId = generatePortonePaymentId();
         this.completedAt = null;
     }
 
+    private String generatePortonePaymentId() {
+        return "payment_" + UUID.randomUUID();
+    }
+
     public void changeStatus(PaymentStatus newStatus) {
+        changeStatus(newStatus, null);
+    }
+
+    public void changeStatus(PaymentStatus newStatus, Integer pgAmount) {
         if (!this.status.canTransitTo(newStatus)) {
             throw new BusinessException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
-        this.status = newStatus;
         if (newStatus == PaymentStatus.PAID) {
+            if (pgAmount == null || pgAmount < 0) {
+                throw new BusinessException(ErrorCode.INVALID_PRICE);
+            }
+
+            this.pgAmount = pgAmount;
             this.completedAt = LocalDateTime.now();
         }
+
+        this.status = newStatus;
     }
+
 }
