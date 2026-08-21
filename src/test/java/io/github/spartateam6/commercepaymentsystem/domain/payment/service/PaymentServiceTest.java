@@ -76,7 +76,7 @@ class PaymentServiceTest {
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
         void validPayment_결제정보없음_예외발생() {
             // given
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, "portone_id_123");
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
@@ -90,7 +90,7 @@ class PaymentServiceTest {
         void validPayment_소유권불일치_예외발생() {
             // given
             Payment payment = PaymentFixture.createPayment();
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, 2L))
@@ -108,7 +108,7 @@ class PaymentServiceTest {
             // given
             Payment payment = PaymentFixture.createPayment(); // amount = 30000
             Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 99999, payment.getPortonePaymentId());
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 99999);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
@@ -125,7 +125,7 @@ class PaymentServiceTest {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
             Order order = createOrder(OrderStatus.CONFIRMED, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
@@ -137,29 +137,12 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("portonePaymentId가 일치하지 않으면 PAYMENT_NOT_MATCH_ORDER 예외가 발생한다")
-        void validPayment_portoneId불일치_예외발생() {
-            // given
-            Payment payment = PaymentFixture.createPayment(); // PENDING, amount=30000
-            Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, "wrong_portone_id");
-
-            given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
-            given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
-
-            // when & then
-            BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.validPayment(memberId, dto));
-            assertEquals(ErrorCode.PAYMENT_NOT_MATCH_ORDER, ex.getErrorCode());
-        }
-
-        @Test
         @DisplayName("결제 상태가 PENDING이고 모든 정보가 일치하면 PaymentDto를 반환한다")
         void validPayment_성공() {
             // given
             Payment payment = PaymentFixture.createPayment(); // PENDING, amount=30000
             Order order = createOrder(OrderStatus.PAYMENT_PENDING, 30000);
-            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000, payment.getPortonePaymentId());
+            PaymentRequestDto dto = new PaymentRequestDto(ORDER_NUMBER, 30000);
 
             given(paymentRepository.findByOrderNumberWithOrder(ORDER_NUMBER)).willReturn(Optional.of(payment));
             given(orderService.getOrderByOrderNumber(ORDER_NUMBER, memberId)).willReturn(order);
