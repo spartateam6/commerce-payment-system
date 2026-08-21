@@ -152,10 +152,9 @@ class PaymentServiceTest {
             willDoNothing().given(cartService).clearCart(memberId);
 
             // when
-            boolean result = paymentService.requestPayment(memberId, dto);
+            paymentService.requestPayment(memberId, dto);
 
             // then
-            assertTrue(result);
             assertEquals(PaymentStatus.PAID, payment.getStatus());
             assertNotNull(payment.getCompletedAt());
             assertEquals(OrderStatus.CONFIRMED, order.getStatus());

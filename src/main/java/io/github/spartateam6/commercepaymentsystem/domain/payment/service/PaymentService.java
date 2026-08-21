@@ -64,7 +64,6 @@ public class PaymentService {
         payment.changeStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
         order.updateStatus(OrderStatus.CONFIRMED);
-        cartService.clearCart(memberId);
 
         pointService.applyPaymentPoint(
                 memberId,
