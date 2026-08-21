@@ -108,7 +108,7 @@ public class OrderFacade {
     public OrderCreateResponse createOrder(Long memberId, OrderCreateRequest request) {
 
         // 회원 조회 및 잠금
-        Member member = memberService.getMemberForUpdate(memberId);
+        Member member = memberService.getMember(memberId);
 
         // 주문할 장바구니 항목 조회
         List<CartItemForOrderResponse> cartItems = getOwnedCartItems(memberId, request.cartItemIds());
