@@ -237,47 +237,50 @@ class PaymentServiceTest {
     }
 
     @Nested
-    @DisplayName("주문별 결제 취소 (cancelByOrder)")
-    class CancelByOrder {
+    @DisplayName("결제대기 주문 취소 (cancelPendingByOrder)")
+    class CancelPendingByOrder {
 
         @Test
         @DisplayName("결제 정보가 없으면 PAYMENT_NOT_FOUND 예외가 발생한다")
-        void cancelByOrder_결제정보없음_예외발생() {
+        void cancelPendingByOrder_결제정보없음_예외발생() {
             // given
             given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.empty());
 
             // when & then
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> paymentService.cancelByOrder(ORDER_NUMBER, PaymentStatus.FAILED));
+                    () -> paymentService.cancelPendingByOrder(ORDER_NUMBER));
             assertEquals(ErrorCode.PAYMENT_NOT_FOUND, ex.getErrorCode());
         }
 
         @Test
         @DisplayName("결제 전 취소 시 Payment 상태가 FAILED로 변경된다")
-        void cancelByOrder_결제전취소_성공() {
+        void cancelPendingByOrder_결제전취소_성공() {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PENDING);
             given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
 
             // when
-            assertDoesNotThrow(() -> paymentService.cancelByOrder(ORDER_NUMBER, PaymentStatus.FAILED));
+            assertDoesNotThrow(() -> paymentService.cancelPendingByOrder(ORDER_NUMBER));
 
             // then
             assertEquals(PaymentStatus.FAILED, payment.getStatus());
         }
 
         @Test
-        @DisplayName("결제 완료 후 취소(환불) 시 Payment 상태가 REFUND로 변경된다")
-        void cancelByOrder_결제후환불_성공() {
+        @DisplayName("결제 완료 건은 결제대기 주문 취소로 처리할 수 없다")
+        void cancelPendingByOrder_결제완료_예외발생() {
             // given
             Payment payment = PaymentFixture.createPaymentWithStatus(PaymentStatus.PAID);
             given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
 
-            // when
-            assertDoesNotThrow(() -> paymentService.cancelByOrder(ORDER_NUMBER, PaymentStatus.REFUND));
+            // when & then
+            BusinessException exception = assertThrows(
+                    BusinessException.class,
+                    () -> paymentService.cancelPendingByOrder(ORDER_NUMBER)
+            );
 
-            // then
-            assertEquals(PaymentStatus.REFUND, payment.getStatus());
+            assertEquals(ErrorCode.INVALID_PAYMENT_STATUS, exception.getErrorCode());
+            assertEquals(PaymentStatus.PAID, payment.getStatus());
         }
     }
 }
