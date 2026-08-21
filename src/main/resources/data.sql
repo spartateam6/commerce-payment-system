@@ -257,38 +257,16 @@ INSERT INTO payment (
     created_at,
     updated_at,
     order_amount,
+    used_point_amount,
+    pg_amount,
     completed_at,
     status,
     order_id
 )
 VALUES
-    (
-        1,
-        NOW(6),
-        NOW(6),
-        30000,
-        NULL,
-        'PENDING',
-        1
-    ),
-    (
-        2,
-        NOW(6),
-        NOW(6),
-        30000,
-        NOW(6),
-        'PAID',
-        2
-    ),
-    (
-        3,
-        NOW(6),
-        NOW(6),
-        12000,
-        NULL,
-        'PENDING',
-        3
-    );
+    (1, NOW(6), NOW(6), 30000, 0, 30000, NULL, 'PENDING', 1),
+    (2, NOW(6), NOW(6), 30000, 5000, 25000, NOW(6), 'PAID', 2),
+    (3, NOW(6), NOW(6), 12000, 0, 12000, NULL, 'PENDING', 3);
 -- ---------------------------------------------------------
 -- 8. POINT_TRANSACTION (원장)
 -- 잔액 == SUM(amount)가 항상 성립하도록 초기 지급도 원장에 남긴다.
