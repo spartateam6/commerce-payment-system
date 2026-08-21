@@ -48,7 +48,7 @@ public class PaymentService {
         }
 
         // portone payment id 검증
-        if (!paymentRequestDto.portonePaymentId().equals(payment.getPortonePaymentId())) {
+        if (payment.getPortonePaymentId() == null || payment.getPortonePaymentId().isEmpty()) {
             throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 

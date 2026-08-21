@@ -10,10 +10,7 @@ public record PaymentRequestDto(
 
         @NotNull
         @Min(1)
-        Integer price,
-
-        @NotBlank
-        String portonePaymentId
+        Integer price
 
 ) {
 }
