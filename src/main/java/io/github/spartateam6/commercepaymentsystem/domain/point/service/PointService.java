@@ -8,7 +8,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointTransac
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransaction;
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransactionType;
 import io.github.spartateam6.commercepaymentsystem.domain.point.repository.PointTransactionRepository;
-import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.PageResponse;
+import io.github.spartateam6.commercepaymentsystem.global.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;

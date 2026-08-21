@@ -3,7 +3,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.point.controller;
 import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointBalanceResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.point.dto.PointTransactionResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.point.service.PointService;
-import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.PageResponse;
+import io.github.spartateam6.commercepaymentsystem.global.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.global.annotation.MemberId;
 import io.github.spartateam6.commercepaymentsystem.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;

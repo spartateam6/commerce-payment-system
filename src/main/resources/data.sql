@@ -48,7 +48,18 @@ VALUES
         '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
         '010-2222-2222',
         0
-    );
+    ),
+    (
+        3,
+        NOW(6),
+        NOW(6),
+        'user@example.com',
+        '포인트많은유저',
+        '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
+        '010-3333-3333',
+        1000000
+    )
+;
 
 
 -- ---------------------------------------------------------
@@ -258,14 +269,17 @@ INSERT INTO payment (
     updated_at,
     order_amount,
     pg_amount,
+    portone_payment_id,
     completed_at,
     status,
     order_id
 )
 VALUES
-    (1, NOW(6), NOW(6), 30000, 30000, NULL, 'PENDING', 1),
-    (2, NOW(6), NOW(6), 30000, 25000, NOW(6), 'PAID', 2),
-    (3, NOW(6), NOW(6), 12000, 12000, NULL, 'PENDING', 3);
+    (1, NOW(6), NOW(6), 30000, 30000, "123", NULL, 'PENDING', 1),
+    (2, NOW(6), NOW(6), 30000, 25000, "234", NOW(6), 'PAID', 2),
+    (3, NOW(6), NOW(6), 12000, 12000, "456", NULL, 'PENDING', 3);
+
+-- ---------------------------------------------------------
 -- ---------------------------------------------------------
 -- 8. POINT_TRANSACTION (원장)
 -- 잔액 == SUM(amount)가 항상 성립하도록 초기 지급도 원장에 남긴다.
@@ -277,4 +291,5 @@ VALUES
 INSERT INTO point_transactions (member_id, payment_id, transaction_type, amount, created_at, updated_at)
 VALUES (1, NULL, 'EARN', 10000, NOW(6), NOW(6)),
        (1, 2, 'USE', -5000, NOW(6), NOW(6)),
-       (1, 2, 'EARN', 250, NOW(6), NOW(6));
+       (1, 2, 'EARN', 250, NOW(6), NOW(6)),
+       (3, NULL, 'EARN', 1000000, NOW(6), NOW(6));

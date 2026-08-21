@@ -45,20 +45,24 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Order getOrder(Long memberId, Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-        if (!order.getMember().getId().equals(memberId)) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
-        }
-        return order;
+        return validateOwner(
+                orderRepository.findById(orderId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)),
+                memberId
+        );
     }
 
     @Transactional(readOnly = true)
     public Order getOrderByOrderNumber(String orderNumber, Long memberId) {
+        return validateOwner(
+                orderRepository.findByOrderNumber(orderNumber)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND)),
+                memberId
+        );
+    }
 
-        Order order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-        if (!order.getMember().getId().equals(memberId)){
+    private Order validateOwner(Order order, Long memberId) {
+        if (!order.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ACCESS);
         }
         return order;

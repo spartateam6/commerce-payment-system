@@ -35,7 +35,6 @@ public class Payment extends AuditingEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
@@ -49,10 +48,10 @@ public class Payment extends AuditingEntity {
     @Column(name = "status", nullable = false, length = 30)
     private PaymentStatus status;
 
-    @Column(name = "portone_payment_id")
+    @Column(name = "portone_payment_id", nullable = false, unique = true)
     private String portonePaymentId;
 
-    @Column(name = "pg_amount")
+    @Column(name = "pg_amount", nullable = false)
     private Integer pgAmount;
 
     @Column(name = "completed_at")

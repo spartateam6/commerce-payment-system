@@ -1,7 +1,7 @@
 package io.github.spartateam6.commercepaymentsystem.domain.product.service;
 
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.request.ProductSearchCondition;
-import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.PageResponse;
+import io.github.spartateam6.commercepaymentsystem.global.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.dto.response.ProductResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.product.entity.Product;
@@ -192,39 +192,10 @@ public class ProductService {
 
         return Collections.unmodifiableMap(result);
     }
-      
-    @Transactional
-    public void deductStock(Long productId, int quantity) {
-        validateQuantity(quantity);
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        int updateedRows = productRepository.decreaseStock(productId, quantity);
-        if (updateedRows == 0) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
-        }
-    }
-
-    @Transactional
-    public void increaseStock(Long productId, int quantity) {
-        validateQuantity(quantity);
-
-        productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        productRepository.increaseStock(productId, quantity);
-    }
 
     @Transactional(readOnly = true)
     public Product getProductEntity(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-    }
-
-    private void validateQuantity(int quantity) {
-        if (quantity <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "수량은 1 이상이어야 합니다.");
-        }
     }
 }

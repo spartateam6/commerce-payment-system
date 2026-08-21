@@ -1,6 +1,5 @@
 package io.github.spartateam6.commercepaymentsystem.domain.product.dto.request;
 
-import io.github.spartateam6.commercepaymentsystem.domain.product.entity.SaleStatus;
 import lombok.Builder;
 
 @Builder
