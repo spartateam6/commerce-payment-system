@@ -5,6 +5,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.order.entity.Order;
 import io.github.spartateam6.commercepaymentsystem.domain.order.entity.OrderStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderItemService;
 import io.github.spartateam6.commercepaymentsystem.domain.order.service.OrderService;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentForOrderResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
@@ -31,8 +32,7 @@ public class PaymentService {
     private final CartService cartService;
     private final PointService pointService;
 
-    @Transactional
-    public boolean requestPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
+    public PaymentDto validPayment(Long memberId, PaymentRequestDto paymentRequestDto) {
         Payment payment = paymentRepository.findByOrderNumberWithOrder(paymentRequestDto.orderNumber())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
@@ -49,40 +49,67 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
         }
 
-        // TODO: 결제 요청 로직 (Portone)
-        // ...
-
-        // 결제 실패
-        if (paymentRequestDto.result() == PaymentRequestDto.PaymentResult.FAIL) {
-            payment.changeStatus(PaymentStatus.FAILED);
-            // 차감한 재고 복구
-            orderItemService.restoreOrderProductStock(order.getId());
-
-            order.updateStatus(OrderStatus.CANCELLED);
-
-            return false;
+        // portone payment id 검증
+        if (payment.getPortonePaymentId() == null || payment.getPortonePaymentId().isEmpty()) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
-        payment.changeStatus(PaymentStatus.PAID);
-        paymentRepository.save(payment);
+        return PaymentDto.from(payment);
+    }
 
+    @Transactional
+    public void failPayment(String orderNumber) {
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.FAILED) {
+            return;
+        }
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+        }
+
+        Order order = payment.getOrder();
+        payment.changeStatus(PaymentStatus.FAILED);
+        order.updateStatus(OrderStatus.CANCELLED);
+        // 차감한 재고 복구
+        orderItemService.restoreOrderProductStock(order.getId());
+        paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public void successPayment(Long memberId, String orderNumber, Long pgAmount) {
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 처리된 결제인지 확인
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            return;
+        }
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
+        }
+
+        Order order = payment.getOrder();
+        payment.changeStatus(PaymentStatus.PAID, pgAmount.intValue());
         order.updateStatus(OrderStatus.CONFIRMED);
 
         pointService.applyPaymentPoint(
                 memberId,
                 payment,
-                payment.getUsedPointAmount(),
+                order.getPointUsedAmount(),
                 payment.getPgAmount()
         );
 
         cartService.clearCart(memberId);
-
-        return true;
+        paymentRepository.save(payment);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void cancelByOrder(String orderNumber, PaymentStatus target) {
-        Payment payment = paymentRepository.findByOrderNumberWithOrder(orderNumber)
+        Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
         payment.changeStatus(target);
@@ -101,7 +128,6 @@ public class PaymentService {
         Payment payment = Payment.builder()
                 .order(order)
                 .orderAmount(order.getTotalAmount())
-                .usedPointAmount(order.getPointUsedAmount())
                 .pgAmount(order.getTotalAmount() - order.getPointUsedAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
@@ -120,10 +146,6 @@ public class PaymentService {
     static class MockData {
         // TODO: Portone 을 추가할 때 webhook 으로 오류처리 (재시도 및 알림)
         // ...
-        private static boolean processPortone() {
-            return true;
-        }
-
         private static boolean refundPortone() {
             return true;
         }
