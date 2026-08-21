@@ -107,15 +107,11 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void cancelByOrder(String orderNumber, PaymentStatus target) {
+    public void cancelPendingByOrder(String orderNumber) {
         Payment payment = paymentRepository.findByOrderNumberWithOrderLock(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        payment.changeStatus(target);
-        if (target == PaymentStatus.REFUND && !MockData.refundPortone()) {
-            // TODO: 실 결제 Portone 붙일 때 webhook 으로 처리
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_PAID);
-        }
+        payment.changeStatus(PaymentStatus.FAILED);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -139,15 +135,4 @@ public class PaymentService {
     public Optional<PaymentForOrderResponse> findByOrderId(Long orderId) {
         return paymentRepository.findByOrder_Id(orderId).map(PaymentForOrderResponse::from);
     }
-
-
-    // TODO: replace Mock data to real data
-    static class MockData {
-        // TODO: Portone 을 추가할 때 webhook 으로 오류처리 (재시도 및 알림)
-        // ...
-        private static boolean refundPortone() {
-            return true;
-        }
-    }
-
 }

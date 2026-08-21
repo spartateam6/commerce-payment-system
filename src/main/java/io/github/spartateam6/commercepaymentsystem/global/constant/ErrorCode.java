@@ -46,6 +46,7 @@ public enum ErrorCode {
     ORDER_PAYMENT_INFORMATION_UNAVAILABLE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_009", "주문의 결제 정보를 확인할 수 없습니다."),
     ALREADY_ORDER_CANCELED(HttpStatus.CONFLICT, "ORDER_010", "이미 취소된 주문입니다."),
     INVALID_POINT_USAGE(HttpStatus.BAD_REQUEST, "ORDER_011", "사용할 포인트 금액이 올바르지 않습니다."),
+    ORDER_REFUND_REQUIRED(HttpStatus.CONFLICT, "ORDER_012", "결제 완료 주문은 환불 요청이 필요합니다."),
 
 
 
@@ -59,6 +60,9 @@ public enum ErrorCode {
     ALREADY_PROCESSED_REFUND(HttpStatus.CONFLICT, "PAYMENT_007", "이미 처리된 환불(취소)요청입니다."),
     PAYMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "PAYMENT_008", "해당 주문의 결제 정보가 이미 존재합니다."),
     PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "PAYMENT_008", "PG사 처리 중 오류가 발생했습니다"),
+
+    // Refund
+    REFUND_NOT_FOUND(HttpStatus.NOT_FOUND, "REFUND_001", "환불 정보를 찾을 수 없습니다."),
 
     // Webhook
     INVALID_WEBHOOK_SIGNATURE(HttpStatus.UNAUTHORIZED, "WEBHOOK_001", "웹훅 서명이 유효하지 않습니다."),
