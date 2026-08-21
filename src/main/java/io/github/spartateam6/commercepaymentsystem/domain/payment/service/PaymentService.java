@@ -93,20 +93,16 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void createPendingPayment(Order order, Integer amount) {
+    public void createPendingPayment(Order order) {
         if (paymentRepository.existsByOrder_Id(order.getId())) {
             throw new BusinessException(ErrorCode.PAYMENT_ALREADY_EXISTS);
         }
 
-        if (order.getTotalAmount().compareTo(amount) != 0) {
-            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
-        }
-
         Payment payment = Payment.builder()
                 .order(order)
-                .orderAmount(amount)
-                .usedPointAmount(0)
-                .pgAmount(amount)
+                .orderAmount(order.getTotalAmount())
+                .usedPointAmount(order.getPointUsedAmount())
+                .pgAmount(order.getTotalAmount() - order.getPointUsedAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
 
