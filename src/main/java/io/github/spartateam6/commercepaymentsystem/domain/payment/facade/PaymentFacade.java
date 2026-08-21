@@ -3,6 +3,7 @@ package io.github.spartateam6.commercepaymentsystem.domain.payment.facade;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentConfirmResponseDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentDto;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.dto.PaymentRequestDto;
+import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.PaymentStatus;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.port.PaymentGateway;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.port.PaymentGatewayResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
@@ -26,6 +27,11 @@ public class PaymentFacade {
             PaymentRequestDto paymentRequestDto
     ) {
         PaymentDto paymentDto = paymentService.validPayment(memberId, paymentRequestDto);
+
+        // 이미 완료된 결제 — PortOne 재조회 없이 idempotent 200 응답
+        if (paymentDto.status() == PaymentStatus.PAID) {
+            return PaymentConfirmResponseDto.success(paymentDto);
+        }
 
         PaymentGatewayResponse pgPayment = paymentGateway.getPayment(paymentDto.portonePaymentId());
 
