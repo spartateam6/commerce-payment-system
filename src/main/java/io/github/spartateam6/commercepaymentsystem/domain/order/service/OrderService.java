@@ -52,6 +52,7 @@ public class OrderService {
         );
     }
 
+    @Transactional(readOnly = true)
     public Order getOrderByOrderNumber(String orderNumber, Long memberId) {
         return validateOwner(
                 orderRepository.findByOrderNumber(orderNumber)
