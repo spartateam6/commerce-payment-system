@@ -92,6 +92,8 @@ public class PaymentService {
         Payment payment = Payment.builder()
                 .order(order)
                 .orderAmount(order.getTotalAmount())
+                .usedPointAmount(order.getPointUsedAmount())
+                .pgAmount(order.getTotalAmount())
                 .status(PaymentStatus.PENDING)
                 .build();
 

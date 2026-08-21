@@ -1,5 +1,6 @@
 package io.github.spartateam6.commercepaymentsystem.domain.point.dto;
 
+import io.github.spartateam6.commercepaymentsystem.domain.payment.entity.Payment;
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransaction;
 import io.github.spartateam6.commercepaymentsystem.domain.point.entity.PointTransactionType;
 
@@ -16,12 +17,13 @@ public record PointTransactionResponse(
 ) {
 
     public static PointTransactionResponse from(PointTransaction pointTransaction) {
+        Payment payment = pointTransaction.getPayment();
         return new PointTransactionResponse(
                 pointTransaction.getId(),
                 pointTransaction.getTransactionType(),
                 pointTransaction.getTransactionType().getLabel(),
                 pointTransaction.getAmount(),
-                pointTransaction.getPayment().getId(),
+                payment == null ? null : payment.getId(),
                 pointTransaction.getCreatedAt()
         );
     }

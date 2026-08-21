@@ -37,7 +37,7 @@ VALUES
         '테스트유저1',
         '$2a$12$GeifU8Kqme5IKtQa9aVAN.CWXCRjHNwIlYssY64Hw.VCBpDnu6wky',
         '010-1111-1111',
-        1000000
+        5250
     ),
     (
         2,
@@ -257,35 +257,25 @@ INSERT INTO payment (
     created_at,
     updated_at,
     order_amount,
+    used_point_amount,
+    pg_amount,
     completed_at,
     status,
     order_id
 )
 VALUES
-    (
-        1,
-        NOW(6),
-        NOW(6),
-        30000,
-        NULL,
-        'PENDING',
-        1
-    ),
-    (
-        2,
-        NOW(6),
-        NOW(6),
-        30000,
-        NOW(6),
-        'PAID',
-        2
-    ),
-    (
-        3,
-        NOW(6),
-        NOW(6),
-        12000,
-        NULL,
-        'PENDING',
-        3
-    );
+    (1, NOW(6), NOW(6), 30000, 0, 30000, NULL, 'PENDING', 1),
+    (2, NOW(6), NOW(6), 30000, 5000, 25000, NOW(6), 'PAID', 2),
+    (3, NOW(6), NOW(6), 12000, 0, 12000, NULL, 'PENDING', 3);
+-- ---------------------------------------------------------
+-- 8. POINT_TRANSACTION (원장)
+-- 잔액 == SUM(amount)가 항상 성립하도록 초기 지급도 원장에 남긴다.
+-- user1: 초기 지급 10,000 → 주문 2번에서 5,000 사용(PG 25,000 결제) → 1% 적립 250
+--        합계 5,250 = member.point_balance
+-- 초기 지급은 연결된 결제가 없어 payment_id가 NULL이다.
+-- ---------------------------------------------------------
+
+INSERT INTO point_transactions (member_id, payment_id, transaction_type, amount, created_at, updated_at)
+VALUES (1, NULL, 'EARN', 10000, NOW(6), NOW(6)),
+       (1, 2, 'USE', -5000, NOW(6), NOW(6)),
+       (1, 2, 'EARN', 250, NOW(6), NOW(6));

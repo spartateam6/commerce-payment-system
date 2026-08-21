@@ -27,4 +27,10 @@ public class MemberService {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Member getMemberForUpdate(Long memberId) {
+        return memberRepository.findByIdForUpdate(memberId)
+                .orElseThrow(()->new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
 }
