@@ -1,1 +1,12 @@
-docker build -t commerce-payment-system:local .
+.git
+.github
+
+.gradle
+build
+
+*.log
+
+.env
+.env.*
+
+README.md
