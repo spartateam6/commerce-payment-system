@@ -38,20 +38,19 @@ public class PaymentService {
 
         Order order = orderService.getOrderByOrderNumber(paymentRequestDto.orderNumber(), memberId);
 
-        // 결제 금액 검증
-        // 프론트에서 넘어온 가격 == DB 가격 ?
+        // 이미 완료된 결제 — Facade에서 idempotent 200 응답 처리
+        if (payment.getStatus() == PaymentStatus.PAID && order.getStatus() == OrderStatus.CONFIRMED) {
+            return PaymentDto.from(payment);
+        }
+
+        // 결제 금액 검증 (프론트에서 넘어온 가격 == DB 가격)
         if (!payment.getOrderAmount().equals(paymentRequestDto.price())) {
             throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
 
         // 주문 상태 검증
-        if (!payment.getStatus().equals(PaymentStatus.PENDING) || !order.getStatus().equals(OrderStatus.PAYMENT_PENDING)) {
+        if (payment.getStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING) {
             throw new BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT);
-        }
-
-        // portone payment id 검증
-        if (payment.getPortonePaymentId() == null || payment.getPortonePaymentId().isEmpty()) {
-            throw new BusinessException(ErrorCode.PAYMENT_NOT_MATCH_ORDER);
         }
 
         return PaymentDto.from(payment);
