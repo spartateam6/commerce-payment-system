@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:     #FF6B35;
+      --primary-dk:  #e55a24;
+      --accent:      #1a1a2e;
+      --text:        #111;
+      --text-sub:    #888;
+      --border:      #e8e8e8;
+      --bg:          #f7f7f8;
+      --card:        #fff;
+      --radius:      14px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                   "Pretendard", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      background: var(--accent);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--primary); }
+
+    /* ── 본문 ── */
+    main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .wrapper {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 0;
+      max-width: 820px;
+      width: 100%;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* ── 왼쪽 브랜드 패널 ── */
+    .brand-panel {
+      background: var(--accent);
+      padding: 48px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      background: rgba(255,107,53,.12);
+      border-radius: 50%;
+      top: -80px;
+      left: -80px;
+    }
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,107,53,.08);
+      border-radius: 50%;
+      bottom: -40px;
+      right: -40px;
+    }
+    .brand-logo {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-logo span { color: var(--primary); }
+    .brand-tagline {
+      color: rgba(255,255,255,.6);
+      font-size: 14px;
+      line-height: 1.8;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+    }
+    .feature-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── 오른쪽 폼 패널 ── */
+    .form-panel {
+      padding: 44px 36px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 탭 ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 4px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-sub);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── 패널 ── */
+    .panel { display: none; flex-direction: column; gap: 18px; }
+    .panel.active { display: flex; }
+
+    .panel-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .panel-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    /* ── 폼 필드 ── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .input-wrap { position: relative; }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"] {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      background: #fafafa;
+      color: var(--text);
+      transition: border-color .2s, background .2s, box-shadow .2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(255,107,53,.1);
+    }
+    .hint {
+      font-size: 11px;
+      color: #bbb;
+      line-height: 1.5;
+    }
+
+    /* ── 버튼 ── */
+    .btn-primary {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+      transition: background .2s, transform .1s, box-shadow .2s;
+      margin-top: 6px;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dk);
+      box-shadow: 0 4px 16px rgba(255,107,53,.35);
+    }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+    /* ── 알림 ── */
+    .alert {
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+    .alert.error   { background: #fff4f4; border: 1px solid #ffd0d0; color: #c0392b; display: block; }
+    .alert.success { background: #f0fff8; border: 1px solid #b2ecd5; color: #1a7a4a; display: block; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 640px) {
+      .wrapper { grid-template-columns: 1fr; }
+      .brand-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+</header>
+
+<main>
+  <div class="wrapper">
+
+    <!-- 브랜드 패널 -->
+    <div class="brand-panel">
+      <div class="brand-logo"><span>S</span>PARTA SHOP</div>
+      <div class="brand-tagline">최고의 상품을<br>합리적인 가격에</div>
+      <div class="brand-features">
+        <div class="brand-feature">
+          <div class="feature-dot"></div>
+          간편한 회원가입과 로그인
+        </div>
+        <div class="brand-feature">
+          <div class="feature-dot"></div>
+          장바구니와 빠른 주문
+        </div>
+        <div class="brand-feature">
+          <div class="feature-dot"></div>
+          안전한 결제 시스템
+        </div>
+      </div>
+    </div>
+
+    <!-- 폼 패널 -->
+    <div class="form-panel">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">로그인</button>
+        <button class="tab" onclick="switchTab('signup')">회원가입</button>
+      </div>
+
+      <!-- 로그인 -->
+      <div id="loginPanel" class="panel active">
+        <div>
+          <div class="panel-title">다시 만나서 반가워요</div>
+          <div class="panel-sub">계정에 로그인하여 쇼핑을 이어가세요</div>
+        </div>
+        <div id="loginAlert" class="alert"></div>
+        <div class="field">
+          <label>이메일</label>
+          <input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>비밀번호</label>
+          <input type="password" id="loginPassword" placeholder="비밀번호 입력" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인</button>
+      </div>
+
+      <!-- 회원가입 -->
+      <div id="signupPanel" class="panel">
+        <div>
+          <div class="panel-title">처음 오셨나요?</div>
+          <div class="panel-sub">회원이 되어 다양한 혜택을 누리세요</div>
+        </div>
+        <div id="signupAlert" class="alert"></div>
+        <div class="field">
+          <label>이메일</label>
+          <input type="email" id="signupEmail" placeholder="example@email.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label>비밀번호</label>
+          <input type="password" id="signupPassword" placeholder="영문 + 숫자 + 특수문자 8자 이상" autocomplete="new-password" />
+          <span class="hint">영문, 숫자, 특수문자를 조합해 8자 이상으로 설정하세요</span>
+        </div>
+        <div class="field">
+          <label>이름</label>
+          <input type="text" id="signupName" placeholder="홍길동" />
+        </div>
+        <div class="field">
+          <label>전화번호</label>
+          <input type="tel" id="signupPhone" placeholder="010-0000-0000" />
+          <span class="hint">010-0000-0000 형식으로 입력하세요</span>
+        </div>
+        <button class="btn-primary" id="signupBtn" onclick="doSignup()">회원가입</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  if (Auth.isLoggedIn()) {
+    const redirect = new URLSearchParams(location.search).get('redirect') || '/demo/products.html';
+    location.href = redirect;
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0) === (tab === 'login'));
+    });
+    document.getElementById('loginPanel').classList.toggle('active', tab === 'login');
+    document.getElementById('signupPanel').classList.toggle('active', tab === 'signup');
+  }
+
+  function setAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `alert ${type}`;
+  }
+  function clearAlert(id) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.className = 'alert';
+  }
+
+  async function doLogin() {
+    clearAlert('loginAlert');
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { setAlert('loginAlert', '이메일과 비밀번호를 입력해주세요.', 'error'); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = '로그인 중…';
+    try {
+      const data = await api.post('/api/auth/login', { email, password });
+      Auth.setToken(data.accessToken);
+      location.href = new URLSearchParams(location.search).get('redirect') || '/demo/products.html';
+    } catch (e) {
+      setAlert('loginAlert', e.message || '이메일 또는 비밀번호를 확인해주세요.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '로그인';
+    }
+  }
+
+  async function doSignup() {
+    clearAlert('signupAlert');
+    const email       = document.getElementById('signupEmail').value.trim();
+    const password    = document.getElementById('signupPassword').value;
+    const name        = document.getElementById('signupName').value.trim();
+    const phoneNumber = document.getElementById('signupPhone').value.trim();
+    if (!email || !password || !name || !phoneNumber) {
+      setAlert('signupAlert', '모든 항목을 입력해주세요.', 'error'); return;
+    }
+
+    const btn = document.getElementById('signupBtn');
+    btn.disabled = true; btn.textContent = '가입 중…';
+    try {
+      await api.post('/api/auth/signup', { email, password, name, phoneNumber });
+      setAlert('signupAlert', '가입이 완료되었습니다! 로그인 탭에서 로그인하세요.', 'success');
+      ['signupEmail','signupPassword','signupName','signupPhone'].forEach(id => document.getElementById(id).value = '');
+    } catch (e) {
+      setAlert('signupAlert', e.message || '회원가입에 실패했습니다.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '회원가입';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    document.getElementById('loginPanel').classList.contains('active') ? doLogin() : doSignup();
+  });
+</script>
+</body>
+</html>

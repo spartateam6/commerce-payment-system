@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>상품 목록 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:    #FF6B35;
+      --primary-dk: #e55a24;
+      --accent:     #1a1a2e;
+      --text:       #111;
+      --text-sub:   #888;
+      --border:     #ebebeb;
+      --bg:         #f5f5f7;
+      --card:       #fff;
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(0,0,0,.06);
+      --shadow-md:  0 8px 28px rgba(0,0,0,.11);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                   "Pretendard", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ────────── 헤더 ────────── */
+    header {
+      background: var(--accent);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .logo span { color: var(--primary); }
+
+    .header-nav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .18s;
+      border: none;
+      font-family: inherit;
+    }
+    .nav-link {
+      color: rgba(255,255,255,.7);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color .15s;
+    }
+    .nav-link:hover { color: #fff; }
+    .nav-sep { color: rgba(255,255,255,.25); font-size: 12px; }
+    .nav-btn-ghost {
+      background: rgba(255,255,255,.1);
+      color: rgba(255,255,255,.85);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .nav-btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-btn-primary:hover { background: var(--primary-dk); }
+
+    /* ────────── 페이지 레이아웃 ────────── */
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ────────── 페이지 타이틀 ────────── */
+    .page-title-area {
+      margin-bottom: 24px;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .page-title span { color: var(--primary); }
+    .page-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* ────────── 필터 바 ────────── */
+    .filter-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-end;
+    }
+    .filter-field { display: flex; flex-direction: column; gap: 5px; }
+    .filter-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .filter-field input,
+    .filter-field select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fafafa;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      min-width: 110px;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .filter-field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .filter-field input:focus,
+    .filter-field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255,107,53,.1);
+      background: #fff;
+    }
+
+    .filter-actions { display: flex; gap: 8px; align-items: flex-end; margin-left: auto; }
+    .btn-search {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, box-shadow .15s;
+      white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--primary-dk); box-shadow: 0 4px 12px rgba(255,107,53,.3); }
+    .btn-reset {
+      background: #f0f0f0;
+      color: var(--text-sub);
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .btn-reset:hover { background: #e4e4e4; }
+
+    /* ────────── 결과 헤더 ────────── */
+    .result-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+    .result-bar strong { color: var(--text); font-weight: 700; }
+
+    /* ────────── 상품 그리드 ────────── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    /* ────────── 상품 카드 ────────── */
+    .product-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: transform .22s cubic-bezier(.25,.46,.45,.94),
+                  box-shadow .22s cubic-bezier(.25,.46,.45,.94);
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+    .product-card.sold-out { opacity: .72; }
+
+    /* 이미지 영역 */
+    .product-img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-img::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
+    }
+    .product-img-icon {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #ccc;
+    }
+    .product-img-icon svg { opacity: .55; }
+    .product-img-icon span { font-size: 11px; font-weight: 500; letter-spacing: 0.3px; }
+
+    /* 품절 오버레이 */
+    .soldout-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .product-card.sold-out .soldout-overlay { display: flex; }
+    .soldout-label {
+      background: rgba(0,0,0,.75);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* 카드 본문 */
+    .card-body {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .badge-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .badge-cat  { background: #f0f4ff; color: #3657c4; }
+    .badge-sale { background: #e8faf3; color: #1a7a4a; }
+    .badge-disc { background: #fff0f0; color: #c0392b; }
+
+    .product-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .product-price {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      margin-top: 2px;
+    }
+    .product-price .unit { font-size: 14px; font-weight: 600; }
+    .product-stock {
+      font-size: 11px;
+      color: #bbb;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+    .stock-warn { color: #e67e22; }
+
+    /* 카드 푸터 */
+    .card-footer { padding: 0 16px 16px; }
+    .btn-cart {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: -0.2px;
+      transition: background .15s, transform .1s;
+    }
+    .btn-cart:hover   { background: #2c2c4a; }
+    .btn-cart:active  { transform: scale(.97); }
+    .btn-cart:disabled {
+      background: #eee;
+      color: #bbb;
+      cursor: not-allowed;
+    }
+    .btn-cart.adding {
+      background: var(--primary);
+    }
+
+    /* ────────── 빈 상태 ────────── */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-sub);
+    }
+    .empty-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-desc  { font-size: 13px; }
+
+    /* ────────── 로딩 ────────── */
+    .loading-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+    .skeleton-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-img  { width: 100%; aspect-ratio: 4/3; }
+    .skeleton-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .skeleton-line { border-radius: 4px; height: 12px; }
+    .skeleton-line.w80 { width: 80%; }
+    .skeleton-line.w60 { width: 60%; }
+    .skeleton-line.w40 { width: 40%; height: 18px; }
+    .skeleton-footer { padding: 0 16px 16px; }
+    .skeleton-btn { border-radius: 9px; height: 38px; width: 100%; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ────────── 페이지네이션 ────────── */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text-sub);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #fff8f5;
+    }
+    .page-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ────────── 토스트 ────────── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--accent);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      z-index: 9999;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { background: #1a7a4a; }
+    #toast.error   { background: #c0392b; }
+
+    /* ────────── 반응형 ────────── */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      .page  { padding: 20px 12px 60px; }
+      .filter-wrap { padding: 16px; }
+      .filter-actions { margin-left: 0; width: 100%; }
+      .btn-search, .btn-reset { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+  <div class="header-nav">
+    <a href="/demo/cart.html" class="nav-link">장바구니</a>
+    <span class="nav-sep">|</span>
+    <a href="/demo/order-list.html" class="nav-link">주문 내역</a>
+    <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
+    <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- 타이틀 -->
+  <div class="page-title-area">
+    <div class="page-title">모든 상품 <span>·</span></div>
+    <div class="page-sub">원하는 상품을 찾아 장바구니에 담아보세요</div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="filter-wrap">
+    <div class="filter-row">
+      <div class="filter-field">
+        <span class="filter-label">카테고리</span>
+        <input type="text" id="fCategory" placeholder="전체" style="min-width:130px" />
+      </div>
+      <div class="filter-field">
+        <span class="filter-label">최소 가격</span>
+        <input type="number" id="fMinPrice" placeholder="0원" min="0" style="min-width:100px" />
+      </div>
+      <div class="filter-field">
+        <span class="filter-label">최대 가격</span>
+        <input type="number" id="fMaxPrice" placeholder="제한 없음" min="0" style="min-width:100px" />
+      </div>
+      <div class="filter-field">
+        <span class="filter-label">판매 상태</span>
+        <select id="fSaleStatus">
+          <option value="">전체</option>
+          <option value="ON_SALE">판매 중</option>
+          <option value="DISCONTINUED">판매 중단</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <span class="filter-label">재고</span>
+        <select id="fSoldOut">
+          <option value="">전체</option>
+          <option value="false">재고 있음</option>
+          <option value="true">품절만</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <span class="filter-label">정렬</span>
+        <select id="fSort">
+          <option value="latest">최신순</option>
+          <option value="priceAsc">낮은 가격순</option>
+          <option value="priceDesc">높은 가격순</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-search" onclick="search(1)">검색</button>
+        <button class="btn-reset" onclick="resetFilters()">초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과 바 -->
+  <div class="result-bar">
+    <span id="resultInfo"></span>
+  </div>
+
+  <!-- 상품 목록 -->
+  <div id="productArea"></div>
+
+  <!-- 페이지네이션 -->
+  <div class="pagination" id="pagination"></div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  /* ── 헤더 ── */
+  function initHeader() {
+    const loggedIn = Auth.isLoggedIn();
+    document.getElementById('loginLink').style.display  = loggedIn ? 'none'  : 'flex';
+    document.getElementById('logoutBtn').style.display  = loggedIn ? 'block' : 'none';
+  }
+
+  /* ── 스켈레톤 로딩 ── */
+  function renderSkeleton(count = 10) {
+    let html = '<div class="loading-grid">';
+    for (let i = 0; i < count; i++) {
+      html += `
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-img"></div>
+          <div class="skeleton-body">
+            <div class="skeleton skeleton-line w80"></div>
+            <div class="skeleton skeleton-line w60"></div>
+            <div class="skeleton skeleton-line w40"></div>
+          </div>
+          <div class="skeleton-footer">
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  /* ── 쿼리 빌드 ── */
+  function buildQuery(page) {
+    const params = new URLSearchParams();
+    const v = id => document.getElementById(id).value.trim();
+    if (v('fCategory'))   params.set('category',   v('fCategory'));
+    if (v('fMinPrice'))   params.set('minPrice',    v('fMinPrice'));
+    if (v('fMaxPrice'))   params.set('maxPrice',    v('fMaxPrice'));
+    if (v('fSaleStatus')) params.set('saleStatus',  v('fSaleStatus'));
+    if (v('fSoldOut'))    params.set('soldOut',     v('fSoldOut'));
+    params.set('sort', document.getElementById('fSort').value);
+    params.set('page', page);
+    return params.toString();
+  }
+
+  /* ── 검색 ── */
+  async function search(page) {
+    document.getElementById('productArea').innerHTML = renderSkeleton(10);
+    document.getElementById('pagination').innerHTML  = '';
+    document.getElementById('resultInfo').textContent = '';
+
+    try {
+      const data = await api.get(`/api/products?${buildQuery(page)}`);
+      renderProducts(data, page);
+      renderPagination(data, page);
+      document.getElementById('resultInfo').innerHTML =
+        `총 <strong>${data.totalElements.toLocaleString()}</strong>개의 상품`;
+    } catch (e) {
+      document.getElementById('productArea').innerHTML = `
+        <div class="empty">
+          <span class="empty-icon">⚠️</span>
+          <div class="empty-title">오류가 발생했습니다</div>
+          <div class="empty-desc">${esc(e.message || '상품을 불러오지 못했습니다.')}</div>
+        </div>`;
+    }
+  }
+
+  /* ── 상품 렌더링 ── */
+  function renderProducts(data, page) {
+    const area = document.getElementById('productArea');
+
+    if (!data.content?.length) {
+      area.innerHTML = `
+        <div class="empty">
+          <span class="empty-icon">🛍️</span>
+          <div class="empty-title">상품이 없습니다</div>
+          <div class="empty-desc">조건을 바꿔서 다시 검색해보세요</div>
+        </div>`;
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'product-grid';
+
+    data.content.forEach(p => {
+      const discontinued = p.saleStatus === 'DISCONTINUED';
+      const soldOut      = p.soldOut;
+      const lowStock     = !soldOut && p.stock > 0 && p.stock <= 5;
+      const disabled     = soldOut || discontinued;
+
+      const card = document.createElement('div');
+      card.className = 'product-card' + (soldOut ? ' sold-out' : '');
+      card.addEventListener('click', () => location.href = `/demo/product-detail.html?id=${p.id}`);
+      card.innerHTML = `
+        <div class="product-img">
+          <div class="soldout-overlay">
+            <span class="soldout-label">SOLD OUT</span>
+          </div>
+          <div class="product-img-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/>
+              <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            </svg>
+            <span>NO IMAGE</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="badge-row">
+            ${p.category ? `<span class="badge badge-cat">${esc(p.category)}</span>` : ''}
+            ${discontinued
+              ? '<span class="badge badge-disc">판매 중단</span>'
+              : '<span class="badge badge-sale">판매 중</span>'}
+          </div>
+          <div class="product-name">${esc(p.name)}</div>
+          <div class="product-price">${p.price.toLocaleString()}<span class="unit">원</span></div>
+          <div class="product-stock ${lowStock ? 'stock-warn' : ''}">
+            ${soldOut ? '품절' : lowStock ? `잔여 ${p.stock}개` : `재고 ${p.stock.toLocaleString()}개`}
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-cart" id="cart-${p.id}"
+            ${disabled ? 'disabled' : `onclick="event.stopPropagation(); addToCart(${p.id}, '${esc(p.name).replace(/'/g,"\\'")}')"`}>
+            ${soldOut ? '품절' : discontinued ? '판매 중단' : '장바구니 담기'}
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    area.innerHTML = '';
+    area.appendChild(grid);
+  }
+
+  /* ── 페이지네이션 렌더링 ── */
+  function renderPagination(data, page) {
+    const el = document.getElementById('pagination');
+    const { totalPages } = data;
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+    const WINDOW = 5;
+    const half   = Math.floor(WINDOW / 2);
+    let s = Math.max(1, page - half);
+    let e = Math.min(totalPages, s + WINDOW - 1);
+    if (e - s < WINDOW - 1) s = Math.max(1, e - WINDOW + 1);
+
+    let html = `<button class="page-btn" onclick="search(${page-1})" ${page<=1?'disabled':''}>‹ 이전</button>`;
+    for (let i = s; i <= e; i++) {
+      html += `<button class="page-btn ${i===page?'active':''}" onclick="search(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="search(${page+1})" ${page>=totalPages?'disabled':''}>다음 ›</button>`;
+    el.innerHTML = html;
+  }
+
+  /* ── 장바구니 담기 ── */
+  async function addToCart(productId, name) {
+    if (!Auth.isLoggedIn()) {
+      location.href = '/demo/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      return;
+    }
+    const btn = document.getElementById(`cart-${productId}`);
+    if (btn) { btn.disabled = true; btn.textContent = '담는 중…'; btn.classList.add('adding'); }
+    try {
+      await api.post('/api/cart/items', { productId, quantity: 1 });
+      showToast(`"${name}" 장바구니에 담았습니다`, 'success');
+    } catch (e) {
+      showToast(e.message || '장바구니 담기 실패', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '장바구니 담기'; btn.classList.remove('adding'); }
+    }
+  }
+
+  /* ── 필터 초기화 ── */
+  function resetFilters() {
+    ['fCategory','fMinPrice','fMaxPrice'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fSaleStatus').value = '';
+    document.getElementById('fSoldOut').value    = '';
+    document.getElementById('fSort').value       = 'latest';
+    search(1);
+  }
+
+  /* ── 토스트 ── */
+  let _toastTimer;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = `show ${type}`;
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.className = '', 2600);
+  }
+
+  /* ── XSS 방지 ── */
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── 엔터키로 검색 ── */
+  document.querySelectorAll('.filter-wrap input').forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') search(1); });
+  });
+
+  /* ── 초기화 ── */
+  initHeader();
+  search(1);
+</script>
+</body>
+</html>

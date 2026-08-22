@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>상품 상세 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:    #FF6B35;
+      --primary-dk: #e55a24;
+      --accent:     #1a1a2e;
+      --text:       #111;
+      --text-sub:   #888;
+      --border:     #ebebeb;
+      --bg:         #f5f5f7;
+      --card:       #fff;
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(0,0,0,.06);
+      --shadow-md:  0 8px 28px rgba(0,0,0,.11);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                   "Pretendard", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      background: var(--accent);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--primary); }
+    .header-nav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-link {
+      color: rgba(255,255,255,.7);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color .15s;
+      padding: 4px 2px;
+    }
+    .nav-link:hover { color: #fff; }
+    .nav-sep { color: rgba(255,255,255,.25); font-size: 12px; }
+    .nav-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .18s;
+      border: none;
+      font-family: inherit;
+    }
+    .nav-btn-ghost   { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+    .nav-btn-ghost:hover  { background: rgba(255,255,255,.2); color: #fff; }
+    .nav-btn-primary { background: var(--primary); color: #fff; }
+    .nav-btn-primary:hover { background: var(--primary-dk); }
+
+    /* ── 레이아웃 ── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+    }
+
+    /* ── 브레드크럼 ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+    .breadcrumb a {
+      color: var(--text-sub);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .breadcrumb a:hover { color: var(--primary); }
+    .breadcrumb-sep { color: #ccc; }
+    .breadcrumb-cur { color: var(--text); font-weight: 600; }
+
+    /* ── 상세 본문 ── */
+    .detail-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── 이미지 영역 ── */
+    .img-col {}
+    .product-img-main {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: linear-gradient(135deg, #f2f2f2 0%, #e8e8e8 100%);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-img-main.sold-out-img::after {
+      content: 'SOLD OUT';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 3px;
+    }
+    .img-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: #ccc;
+    }
+    .img-placeholder svg { opacity: .45; }
+    .img-placeholder span { font-size: 12px; font-weight: 500; letter-spacing: 0.5px; }
+
+
+    /* ── 정보 컬럼 ── */
+    .info-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 뱃지 행 */
+    .badge-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-cat  { background: #f0f4ff; color: #3657c4; }
+    .badge-sale { background: #e8faf3; color: #1a7a4a; }
+    .badge-disc { background: #fff0f0; color: #c0392b; }
+    .badge-soldout { background: #f5f5f5; color: #999; }
+
+    /* 상품명 */
+    .product-name {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.35;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    /* 가격 */
+    .price-wrap {
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .price-label { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+    .price-value {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+    .price-value .won { font-size: 20px; font-weight: 700; margin-left: 2px; }
+
+    /* 재고 */
+    .stock-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+    .stock-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .stock-ok   { background: #00c471; }
+    .stock-low  { background: #e67e22; }
+    .stock-none { background: #ccc; }
+    .stock-warn { color: #e67e22; font-weight: 700; }
+
+    /* 수량 선택 */
+    .qty-section { display: flex; flex-direction: column; gap: 8px; }
+    .qty-label { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      width: fit-content;
+    }
+    .qty-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: #f8f8f8;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .qty-btn:hover:not(:disabled) { background: #eee; }
+    .qty-btn:disabled { color: #ccc; cursor: not-allowed; }
+    .qty-val {
+      width: 52px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-left: 1.5px solid var(--border);
+      border-right: 1.5px solid var(--border);
+      padding: 0;
+      height: 44px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    /* 합계 */
+    .total-row {
+      background: #f8f8f8;
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-label { font-size: 13px; font-weight: 700; color: var(--text-sub); }
+    .total-price { font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .total-price .won { font-size: 16px; }
+
+    /* 액션 버튼 */
+    .action-btns { display: flex; flex-direction: column; gap: 10px; }
+    .btn-cart-main {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: -0.3px;
+      transition: background .15s, transform .1s, box-shadow .15s;
+    }
+    .btn-cart-main:hover  { background: #2c2c4a; box-shadow: 0 4px 16px rgba(26,26,46,.25); }
+    .btn-cart-main:active { transform: scale(.98); }
+    .btn-cart-main:disabled { background: #ddd; color: #aaa; cursor: not-allowed; box-shadow: none; }
+
+    .btn-buy-now {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: -0.3px;
+      transition: background .15s, transform .1s, box-shadow .15s;
+    }
+    .btn-buy-now:hover  { background: var(--primary-dk); box-shadow: 0 4px 16px rgba(255,107,53,.35); }
+    .btn-buy-now:active { transform: scale(.98); }
+    .btn-buy-now:disabled { background: #ddd; color: #aaa; cursor: not-allowed; box-shadow: none; }
+
+    .btn-back {
+      width: 100%;
+      background: transparent;
+      color: var(--text-sub);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .btn-back:hover { border-color: var(--text-sub); color: var(--text); }
+
+    /* ── 상품 설명 ── */
+    .desc-section {
+      margin-top: 40px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .desc-head {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      background: #fafafa;
+    }
+    .desc-body {
+      padding: 24px;
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.85;
+      min-height: 120px;
+    }
+
+    /* ── 메타 정보 ── */
+    .meta-section {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .meta-head {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      background: #fafafa;
+    }
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .meta-table td {
+      padding: 13px 24px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .meta-table tr:last-child td { border-bottom: none; }
+    .meta-table .meta-key {
+      font-weight: 700;
+      color: var(--text-sub);
+      width: 120px;
+    }
+    .meta-table .meta-val { color: var(--text); }
+
+    /* ── 스켈레톤 ── */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── 에러 ── */
+    .error-wrap {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-sub);
+    }
+    .error-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .error-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .error-desc  { font-size: 13px; margin-bottom: 24px; }
+
+    /* ── 토스트 ── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      z-index: 9999;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      background: var(--accent);
+      color: #fff;
+    }
+    #toast.show   { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { background: #1a7a4a; }
+    #toast.error   { background: #c0392b; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 720px) {
+      header { padding: 0 16px; }
+      .page  { padding: 20px 14px 60px; }
+      .detail-wrap { grid-template-columns: 1fr; gap: 24px; }
+      .product-name { font-size: 20px; }
+      .price-value  { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+  <div class="header-nav">
+    <a href="/demo/cart.html" class="nav-link">장바구니</a>
+    <span class="nav-sep">|</span>
+    <a href="/demo/order-list.html" class="nav-link">주문 내역</a>
+    <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
+    <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- 브레드크럼 -->
+  <div class="breadcrumb">
+    <a href="/demo/products.html">홈</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="/demo/products.html">상품 목록</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-cur" id="bcName">상품 상세</span>
+  </div>
+
+  <!-- 상세 본문 -->
+  <div id="detailArea"></div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  const productId = new URLSearchParams(location.search).get('id');
+  let unitPrice = 0;
+
+  /* ── 헤더 ── */
+  function initHeader() {
+    const loggedIn = Auth.isLoggedIn();
+    document.getElementById('loginLink').style.display = loggedIn ? 'none'  : 'flex';
+    document.getElementById('logoutBtn').style.display = loggedIn ? 'block' : 'none';
+  }
+
+  /* ── 날짜 포맷 ── */
+  function fmtDate(iso) {
+    if (!iso) return '-';
+    return iso.slice(0, 10).replace(/-/g, '.');
+  }
+
+  /* ── 수량 조작 ── */
+  function changeQty(delta) {
+    const input = document.getElementById('qtyInput');
+    const max   = parseInt(input.max, 10);
+    const next  = Math.min(Math.max(1, parseInt(input.value, 10) + delta), max);
+    input.value = next;
+    updateTotal();
+  }
+
+  function updateTotal() {
+    const qty   = parseInt(document.getElementById('qtyInput').value, 10) || 1;
+    document.getElementById('totalPrice').textContent = (unitPrice * qty).toLocaleString();
+  }
+
+  /* ── 상품 렌더링 ── */
+  function renderProduct(p) {
+    unitPrice = p.price;
+    const discontinued = p.saleStatus === 'DISCONTINUED';
+    const soldOut      = p.soldOut;
+    const lowStock     = !soldOut && p.stock > 0 && p.stock <= 5;
+    const disabled     = soldOut || discontinued;
+    const maxQty       = soldOut ? 1 : p.stock;
+
+    document.title = `${p.name} : SPARTA SHOP`;
+    document.getElementById('bcName').textContent = p.name;
+
+    const stockDotClass = soldOut ? 'stock-none' : lowStock ? 'stock-low' : 'stock-ok';
+    const stockText     = soldOut
+      ? '품절'
+      : lowStock
+        ? `<span class="stock-warn">잔여 ${p.stock}개 (소량)</span>`
+        : `${p.stock.toLocaleString()}개 재고 있음`;
+
+    document.getElementById('detailArea').innerHTML = `
+      <div class="detail-wrap">
+
+        <!-- 이미지 컬럼 -->
+        <div class="img-col">
+          <div class="product-img-main ${soldOut ? 'sold-out-img' : ''}">
+            <div class="img-placeholder">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+              <span>NO IMAGE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 정보 컬럼 -->
+        <div class="info-col">
+          <div>
+            <div class="badge-row" style="margin-bottom:12px">
+              ${p.category ? `<span class="badge badge-cat">${esc(p.category)}</span>` : ''}
+              ${discontinued
+                ? '<span class="badge badge-disc">판매 중단</span>'
+                : '<span class="badge badge-sale">판매 중</span>'}
+              ${soldOut ? '<span class="badge badge-soldout">품절</span>' : ''}
+            </div>
+            <div class="product-name">${esc(p.name)}</div>
+          </div>
+
+          <div class="price-wrap">
+            <div class="price-label">판매가</div>
+            <div class="price-value">${p.price.toLocaleString()}<span class="won">원</span></div>
+          </div>
+
+          <div class="stock-row">
+            <div class="stock-dot ${stockDotClass}"></div>
+            ${stockText}
+          </div>
+
+          ${!disabled ? `
+          <div class="qty-section">
+            <div class="qty-label">수량</div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty(-1)">−</button>
+              <input type="number" id="qtyInput" class="qty-val"
+                value="1" min="1" max="${maxQty}"
+                oninput="updateTotal()" />
+              <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+          </div>
+
+          <div class="total-row">
+            <span class="total-label">합계</span>
+            <span class="total-price"><span id="totalPrice">${p.price.toLocaleString()}</span><span class="won">원</span></span>
+          </div>
+          ` : ''}
+
+          <div class="action-btns">
+            <button class="btn-buy-now" id="buyNowBtn"
+              ${disabled ? 'disabled' : `onclick="buyNow(${p.id}, '${esc(p.name).replace(/'/g,"\\'")}')"`}>
+              ${soldOut ? '품절된 상품입니다' : discontinued ? '판매 중단된 상품입니다' : '바로 주문'}
+            </button>
+            <button class="btn-cart-main" id="cartBtn"
+              ${disabled ? 'disabled' : `onclick="addToCart(${p.id}, '${esc(p.name).replace(/'/g,"\\'")}')"`}>
+              ${soldOut ? '품절된 상품입니다' : discontinued ? '판매 중단된 상품입니다' : '장바구니에 담기'}
+            </button>
+            <button class="btn-back" onclick="history.back()">← 목록으로 돌아가기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상품 설명 -->
+      <div class="desc-section">
+        <div class="desc-head">상품 설명</div>
+        <div class="desc-body">${esc(p.description || '상품 설명이 없습니다.')}</div>
+      </div>
+
+      <!-- 상품 정보 -->
+      <div class="meta-section">
+        <div class="meta-head">상품 정보</div>
+        <table class="meta-table">
+          <tr>
+            <td class="meta-key">카테고리</td>
+            <td class="meta-val">${esc(p.category || '-')}</td>
+          </tr>
+          <tr>
+            <td class="meta-key">판매 상태</td>
+            <td class="meta-val">${discontinued ? '판매 중단' : '판매 중'}</td>
+          </tr>
+          <tr>
+            <td class="meta-key">재고</td>
+            <td class="meta-val">${p.stock.toLocaleString()}개</td>
+          </tr>
+          <tr>
+            <td class="meta-key">등록일</td>
+            <td class="meta-val">${fmtDate(p.createdAt)}</td>
+          </tr>
+          <tr>
+            <td class="meta-key">수정일</td>
+            <td class="meta-val">${fmtDate(p.updatedAt)}</td>
+          </tr>
+        </table>
+      </div>
+    `;
+  }
+
+  /* ── 에러 ── */
+  function renderError(msg) {
+    document.getElementById('detailArea').innerHTML = `
+      <div class="error-wrap">
+        <span class="error-icon">😔</span>
+        <div class="error-title">상품을 찾을 수 없습니다</div>
+        <div class="error-desc">${esc(msg || '존재하지 않는 상품이거나 삭제된 상품입니다.')}</div>
+        <button class="btn-back" onclick="location.href='/demo/products.html'" style="width:auto;padding:12px 28px">
+          상품 목록으로
+        </button>
+      </div>`;
+  }
+
+  /* ── 스켈레톤 ── */
+  function renderSkeleton() {
+    document.getElementById('detailArea').innerHTML = `
+      <div class="detail-wrap">
+        <div class="img-col">
+          <div class="skeleton" style="width:100%;aspect-ratio:1/1;border-radius:14px"></div>
+        </div>
+        <div class="info-col" style="gap:16px">
+          <div class="skeleton" style="height:16px;width:30%;border-radius:6px"></div>
+          <div class="skeleton" style="height:28px;width:80%;border-radius:6px"></div>
+          <div class="skeleton" style="height:28px;width:60%;border-radius:6px"></div>
+          <div class="skeleton" style="height:1px;width:100%"></div>
+          <div class="skeleton" style="height:14px;width:40%;border-radius:6px"></div>
+          <div class="skeleton" style="height:48px;width:100%;border-radius:12px"></div>
+          <div class="skeleton" style="height:48px;width:100%;border-radius:12px"></div>
+        </div>
+      </div>`;
+  }
+
+  /* ── 바로 주문 ── */
+  async function buyNow(productId, name) {
+    if (!Auth.isLoggedIn()) {
+      location.href = '/demo/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      return;
+    }
+    const qty  = parseInt(document.getElementById('qtyInput')?.value || 1, 10);
+    const btn  = document.getElementById('buyNowBtn');
+    btn.disabled = true;
+    btn.textContent = '주문 준비 중…';
+
+    try {
+      const cartItem = await api.post('/api/cart/items', { productId, quantity: qty });
+      const order    = await api.post('/api/orders', { cartItemIds: [cartItem.cartItemId], pointToUse: 0 });
+      location.href  = `/demo/order-confirm.html?orderId=${order.orderId}&portonePaymentId=${encodeURIComponent(order.portonePaymentId || '')}&pgAmount=${order.pgAmount}`;
+    } catch (e) {
+      showToast(e.message || '주문 처리 실패', 'error');
+      btn.disabled = false;
+      btn.textContent = '바로 주문';
+    }
+  }
+
+  /* ── 장바구니 담기 ── */
+  async function addToCart(productId, name) {
+    if (!Auth.isLoggedIn()) {
+      location.href = '/demo/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      return;
+    }
+    const qty = parseInt(document.getElementById('qtyInput')?.value || 1, 10);
+    const btn = document.getElementById('cartBtn');
+    btn.disabled = true;
+    btn.textContent = '담는 중…';
+
+    try {
+      await api.post('/api/cart/items', { productId, quantity: qty });
+      showToast(`"${name}" ${qty}개를 장바구니에 담았습니다`, 'success');
+    } catch (e) {
+      showToast(e.message || '장바구니 담기 실패', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '장바구니에 담기';
+    }
+  }
+
+  /* ── 토스트 ── */
+  let _timer;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = `show ${type}`;
+    clearTimeout(_timer);
+    _timer = setTimeout(() => el.className = '', 2600);
+  }
+
+  /* ── XSS ── */
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── 초기 로드 ── */
+  initHeader();
+
+  if (!productId) {
+    renderError('상품 ID가 없습니다.');
+  } else {
+    renderSkeleton();
+    api.get(`/api/products/${productId}`)
+      .then(renderProduct)
+      .catch(e => renderError(e.message));
+  }
+</script>
+</body>
+</html>

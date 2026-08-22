@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>장바구니 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:    #FF6B35;
+      --primary-dk: #e55a24;
+      --accent:     #1a1a2e;
+      --text:       #111;
+      --text-sub:   #888;
+      --border:     #ebebeb;
+      --bg:         #f5f5f7;
+      --card:       #fff;
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(0,0,0,.06);
+      --shadow-md:  0 8px 28px rgba(0,0,0,.11);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+    /* ── 헤더 ── */
+    header { background: var(--accent); height: 60px; display: flex; align-items: center; padding: 0 32px; gap: 20px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; text-decoration: none; letter-spacing: -0.5px; }
+    .logo span { color: var(--primary); }
+    .header-nav { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .nav-link { color: rgba(255,255,255,.7); text-decoration: none; font-size: 13px; font-weight: 600; transition: color .15s; }
+    .nav-link:hover { color: #fff; }
+    .nav-sep { color: rgba(255,255,255,.25); font-size: 12px; }
+    .nav-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all .18s; border: none; font-family: inherit; }
+    .nav-btn-ghost { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .nav-btn-primary { background: var(--primary); color: #fff; }
+    .nav-btn-primary:hover { background: var(--primary-dk); }
+
+    /* ── 레이아웃 ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+    .page-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 24px; }
+    .page-title span { color: var(--primary); font-size: 16px; font-weight: 600; margin-left: 6px; }
+
+    /* ── 장바구니 레이아웃 ── */
+    .cart-layout { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
+
+    /* ── 아이템 목록 ── */
+    .items-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .items-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+    .items-header-title { font-size: 14px; font-weight: 700; }
+    .btn-clear { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; font-size: 12px; color: var(--text-sub); cursor: pointer; font-family: inherit; transition: all .15s; }
+    .btn-clear:hover { border-color: #c0392b; color: #c0392b; }
+
+    /* ── 카트 아이템 ── */
+    .cart-item { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: background .15s; }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item:hover { background: #fafafa; }
+
+    .item-img {
+      width: 72px; height: 72px; background: linear-gradient(135deg, #f0f0f0, #e8e8e8);
+      border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .item-img svg { opacity: .4; }
+
+    .item-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .item-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-name a { color: var(--text); text-decoration: none; transition: color .15s; }
+    .item-name a:hover { color: var(--primary); }
+    .item-unit-price { font-size: 12px; color: var(--text-sub); }
+
+    .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+    .item-line-price { font-size: 16px; font-weight: 800; white-space: nowrap; }
+
+    /* ── 수량 컨트롤 ── */
+    .qty-ctrl { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .qty-btn { width: 32px; height: 32px; border: none; background: #f8f8f8; color: var(--text); font-size: 16px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
+    .qty-btn:hover:not(:disabled) { background: #eee; }
+    .qty-btn:disabled { color: #ccc; cursor: not-allowed; }
+    .qty-val { width: 40px; text-align: center; font-size: 14px; font-weight: 700; border: none; border-left: 1.5px solid var(--border); border-right: 1.5px solid var(--border); padding: 0; height: 32px; outline: none; background: #fff; font-family: inherit; }
+
+    .btn-delete { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; transition: color .15s; }
+    .btn-delete:hover { color: #c0392b; }
+
+    /* ── 빈 카트 ── */
+    .empty { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; display: block; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .empty-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 24px; }
+    .btn-go-shop { display: inline-block; background: var(--primary); color: #fff; text-decoration: none; border-radius: 10px; padding: 12px 28px; font-size: 14px; font-weight: 700; transition: background .15s; }
+    .btn-go-shop:hover { background: var(--primary-dk); }
+
+    /* ── 주문 요약 ── */
+    .summary-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 76px; }
+    .summary-title { font-size: 15px; font-weight: 800; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .summary-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sub); }
+    .summary-total { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--border); }
+    .summary-total-label { font-size: 14px; font-weight: 700; }
+    .summary-total-price { font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .summary-total-price .won { font-size: 16px; }
+
+    .btn-order { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; transition: background .15s, box-shadow .15s, transform .1s; }
+    .btn-order:hover { background: var(--primary-dk); box-shadow: 0 4px 16px rgba(255,107,53,.35); }
+    .btn-order:active { transform: scale(.98); }
+    .btn-order:disabled { background: #ddd; color: #aaa; cursor: not-allowed; box-shadow: none; }
+
+    /* ── 스켈레톤 ── */
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── 토스트 ── */
+    #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--accent); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s; z-index: 9999; white-space: nowrap; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { background: #1a7a4a; }
+    #toast.error { background: #c0392b; }
+
+    @media (max-width: 680px) {
+      header { padding: 0 16px; }
+      .page { padding: 20px 14px 60px; }
+      .cart-layout { grid-template-columns: 1fr; }
+      .summary-wrap { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+  <div class="header-nav">
+    <a href="/demo/products.html" class="nav-link">상품 목록</a>
+    <span class="nav-sep">|</span>
+    <a href="/demo/order-list.html" class="nav-link">주문 내역</a>
+    <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
+    <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-title">장바구니 <span id="itemCount"></span></div>
+
+  <div class="cart-layout">
+    <div class="items-wrap" id="itemsWrap"></div>
+
+    <div class="summary-wrap">
+      <div class="summary-title">주문 요약</div>
+      <div class="summary-row"><span>상품 금액</span><span id="sumPrice">-</span></div>
+      <div class="summary-total">
+        <span class="summary-total-label">총 결제 금액</span>
+        <span class="summary-total-price"><span id="totalPrice">0</span><span class="won">원</span></span>
+      </div>
+      <button class="btn-order" id="orderBtn" onclick="createOrder()" disabled>주문하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  if (!Auth.requireAuth()) {}
+
+  let cartData = null;
+
+  /* ── 카트 로드 ── */
+  async function loadCart() {
+    const wrap = document.getElementById('itemsWrap');
+    wrap.innerHTML = `
+      <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+        ${[1,2,3].map(() => `
+          <div style="display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center">
+            <div class="skeleton" style="width:72px;height:72px;border-radius:10px"></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="skeleton" style="height:14px;width:70%"></div>
+              <div class="skeleton" style="height:12px;width:40%"></div>
+            </div>
+            <div class="skeleton" style="height:32px;width:80px;border-radius:8px"></div>
+          </div>`).join('')}
+      </div>`;
+
+    try {
+      cartData = await api.get('/api/cart/items');
+      renderCart();
+    } catch (e) {
+      wrap.innerHTML = `<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-title">오류가 발생했습니다</div><div class="empty-desc">${esc(e.message)}</div></div>`;
+    }
+  }
+
+  /* ── 카트 렌더링 ── */
+  function renderCart() {
+    const wrap   = document.getElementById('itemsWrap');
+    const items  = cartData?.items || [];
+    const total  = cartData?.totalPrice || 0;
+
+    document.getElementById('itemCount').textContent = items.length ? `(${items.length})` : '';
+    document.getElementById('sumPrice').textContent  = total.toLocaleString() + '원';
+    document.getElementById('totalPrice').textContent = total.toLocaleString();
+    document.getElementById('orderBtn').disabled = items.length === 0;
+
+    if (items.length === 0) {
+      wrap.innerHTML = `
+        <div class="empty">
+          <span class="empty-icon">🛒</span>
+          <div class="empty-title">장바구니가 비어있습니다</div>
+          <div class="empty-desc">마음에 드는 상품을 담아보세요!</div>
+          <a class="btn-go-shop" href="/demo/products.html">쇼핑 계속하기</a>
+        </div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="items-header">
+        <span class="items-header-title">상품 ${items.length}개</span>
+        <button class="btn-clear" onclick="clearCart()">전체 삭제</button>
+      </div>
+      ${items.map(it => `
+        <div class="cart-item" id="item-${it.cartItemId}">
+          <div class="item-img">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+              <path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/>
+              <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            </svg>
+          </div>
+          <div class="item-info">
+            <div class="item-name"><a href="/demo/product-detail.html?id=${it.productId}">${esc(it.productName)}</a></div>
+            <div class="item-unit-price">${it.price.toLocaleString()}원 / 개</div>
+          </div>
+          <div class="item-right">
+            <div class="item-line-price">${it.totalPrice.toLocaleString()}원</div>
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="updateQty(${it.cartItemId}, ${it.quantity - 1})" ${it.quantity <= 1 ? 'disabled' : ''}>−</button>
+              <input class="qty-val" type="number" value="${it.quantity}" min="1"
+                onchange="updateQty(${it.cartItemId}, parseInt(this.value)||1)" />
+              <button class="qty-btn" onclick="updateQty(${it.cartItemId}, ${it.quantity + 1})">+</button>
+            </div>
+            <button class="btn-delete" onclick="deleteItem(${it.cartItemId})" title="삭제">×</button>
+          </div>
+        </div>
+      `).join('')}`;
+  }
+
+  /* ── 수량 업데이트 ── */
+  async function updateQty(cartItemId, qty) {
+    if (qty < 1) return;
+    try {
+      const updated = await api.patch(`/api/cart/items/${cartItemId}`, { quantity: qty });
+      const item = cartData.items.find(i => i.cartItemId === cartItemId);
+      if (item) {
+        item.quantity   = updated.quantity;
+        item.totalPrice = updated.totalPrice;
+      }
+      cartData.totalPrice = cartData.items.reduce((s, i) => s + i.totalPrice, 0);
+      renderCart();
+    } catch (e) {
+      showToast(e.message || '수량 변경 실패', 'error');
+      renderCart();
+    }
+  }
+
+  /* ── 아이템 삭제 ── */
+  async function deleteItem(cartItemId) {
+    try {
+      await api.delete(`/api/cart/items/${cartItemId}`);
+      cartData.items = cartData.items.filter(i => i.cartItemId !== cartItemId);
+      cartData.totalPrice = cartData.items.reduce((s, i) => s + i.totalPrice, 0);
+      renderCart();
+      showToast('삭제했습니다', 'success');
+    } catch (e) {
+      showToast(e.message || '삭제 실패', 'error');
+    }
+  }
+
+  /* ── 전체 삭제 ── */
+  async function clearCart() {
+    if (!confirm('장바구니를 전체 비우시겠습니까?')) return;
+    try {
+      await api.delete('/api/cart/items');
+      cartData.items = [];
+      cartData.totalPrice = 0;
+      renderCart();
+    } catch (e) {
+      showToast(e.message || '삭제 실패', 'error');
+    }
+  }
+
+  /* ── 주문 생성 ── */
+  async function createOrder() {
+    const items = cartData?.items || [];
+    if (items.length === 0) return;
+
+    const btn = document.getElementById('orderBtn');
+    btn.disabled = true;
+    btn.textContent = '주문 처리 중…';
+
+    try {
+      const cartItemIds = items.map(i => i.cartItemId);
+      const order = await api.post('/api/orders', { cartItemIds, pointToUse: 0 });
+      location.href = `/demo/order-confirm.html?orderId=${order.orderId}&portonePaymentId=${encodeURIComponent(order.portonePaymentId || '')}&pgAmount=${order.pgAmount}`;
+    } catch (e) {
+      showToast(e.message || '주문 생성 실패', 'error');
+      btn.disabled = false;
+      btn.textContent = '주문하기';
+    }
+  }
+
+  /* ── 토스트 ── */
+  let _t;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = `show ${type}`;
+    clearTimeout(_t); _t = setTimeout(() => el.className = '', 2600);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('loginLink').style.display  = Auth.isLoggedIn() ? 'none'  : 'flex';
+  document.getElementById('logoutBtn').style.display  = Auth.isLoggedIn() ? 'block' : 'none';
+  loadCart();
+</script>
+</body>
+</html>
