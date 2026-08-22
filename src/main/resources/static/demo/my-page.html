@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 정보 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:    #FF6B35;
+      --primary-dk: #e55a24;
+      --accent:     #1a1a2e;
+      --text:       #111;
+      --text-sub:   #888;
+      --border:     #ebebeb;
+      --bg:         #f5f5f7;
+      --card:       #fff;
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(0,0,0,.06);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+    header { background: var(--accent); height: 60px; display: flex; align-items: center; padding: 0 32px; gap: 20px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; text-decoration: none; letter-spacing: -0.5px; }
+    .logo span { color: var(--primary); }
+    .header-nav { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .nav-link { color: rgba(255,255,255,.7); text-decoration: none; font-size: 13px; font-weight: 600; transition: color .15s; }
+    .nav-link:hover, .nav-link.active { color: #fff; }
+    .nav-sep { color: rgba(255,255,255,.25); font-size: 12px; }
+    .nav-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .18s; border: none; font-family: inherit; }
+    .nav-btn-ghost { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+    .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
+    .page-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .page-sub { color: var(--text-sub); font-size: 13px; margin-bottom: 24px; }
+
+    .summary-grid { display: grid; grid-template-columns: 1.35fr .85fr; gap: 18px; margin-bottom: 20px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); background: #fafafa; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+    .card-body { padding: 20px; }
+
+    .profile { display: flex; align-items: center; gap: 18px; }
+    .profile-avatar { width: 58px; height: 58px; border-radius: 50%; background: #fff0e9; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; flex-shrink: 0; }
+    .profile-info { min-width: 0; flex: 1; }
+    .profile-name { font-size: 18px; font-weight: 900; margin-bottom: 7px; }
+    .profile-row { display: flex; gap: 10px; font-size: 13px; line-height: 1.8; }
+    .profile-key { width: 52px; color: var(--text-sub); flex-shrink: 0; }
+    .profile-value { overflow-wrap: anywhere; }
+
+    .balance-card { background: linear-gradient(135deg, var(--primary), #ff8b61); color: #fff; border: none; }
+    .balance-card .card-head { background: transparent; border-color: rgba(255,255,255,.2); }
+    .balance-body { padding: 24px 20px; }
+    .balance-label { font-size: 12px; opacity: .78; margin-bottom: 8px; }
+    .balance-value { font-size: 30px; font-weight: 900; letter-spacing: -1px; }
+    .balance-unit { font-size: 18px; margin-left: 3px; }
+
+    .transaction-list { display: flex; flex-direction: column; }
+    .transaction-item { display: grid; grid-template-columns: 1fr auto; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border); align-items: center; }
+    .transaction-item:last-child { border-bottom: none; }
+    .transaction-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .transaction-top { display: flex; align-items: center; gap: 8px; }
+    .type-badge { display: inline-flex; align-items: center; border-radius: 20px; padding: 3px 9px; font-size: 11px; font-weight: 800; }
+    .type-plus { background: #e8faf3; color: #1a7a4a; }
+    .type-minus { background: #fff0f0; color: #c0392b; }
+    .transaction-payment { color: var(--text-sub); font-size: 12px; }
+    .transaction-date { color: var(--text-sub); font-size: 12px; }
+    .transaction-amount { font-size: 16px; font-weight: 900; white-space: nowrap; }
+    .amount-plus { color: #1a7a4a; }
+    .amount-minus { color: #c0392b; }
+
+    .empty { text-align: center; padding: 54px 20px; color: var(--text-sub); }
+    .empty-title { color: var(--text); font-size: 15px; font-weight: 700; margin-bottom: 7px; }
+    .empty-desc { font-size: 13px; }
+    .load-more-wrap { padding: 16px 20px; border-top: 1px solid var(--border); text-align: center; }
+    .btn-more { min-width: 140px; padding: 10px 20px; border: 1px solid var(--border); border-radius: 9px; background: #fff; color: var(--text); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .btn-more:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-more:disabled { color: #aaa; cursor: wait; }
+    .error-box { padding: 28px 20px; color: #c0392b; text-align: center; font-size: 13px; }
+
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    @media (max-width: 680px) {
+      header { padding: 0 16px; }
+      .header-nav { gap: 8px; }
+      .nav-link { font-size: 12px; }
+      .page { padding: 20px 14px 60px; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+  <div class="header-nav">
+    <a href="/demo/products.html" class="nav-link">상품 목록</a>
+    <span class="nav-sep">|</span>
+    <a href="/demo/cart.html" class="nav-link">장바구니</a>
+    <a href="/demo/order-list.html" class="nav-link">주문 내역</a>
+    <a href="/demo/my-page.html" class="nav-link active">내 정보</a>
+    <button class="nav-btn nav-btn-ghost" onclick="Auth.logout()">로그아웃</button>
+  </div>
+</header>
+
+<main class="page">
+  <h1 class="page-title">내 정보</h1>
+  <p class="page-sub">회원 정보와 포인트 이용 내역을 확인하세요</p>
+
+  <section class="summary-grid">
+    <article class="card">
+      <div class="card-head">회원 정보</div>
+      <div class="card-body" id="memberArea">
+        <div style="display:flex;gap:16px;align-items:center">
+          <div class="skeleton" style="width:58px;height:58px;border-radius:50%"></div>
+          <div style="display:flex;flex:1;flex-direction:column;gap:9px">
+            <div class="skeleton" style="height:18px;width:35%"></div>
+            <div class="skeleton" style="height:13px;width:75%"></div>
+            <div class="skeleton" style="height:13px;width:55%"></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card balance-card">
+      <div class="card-head">보유 포인트</div>
+      <div class="balance-body" id="balanceArea">
+        <div class="skeleton" style="height:38px;width:70%;background:rgba(255,255,255,.25)"></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span>포인트 이용 내역</span>
+      <span id="transactionCount" style="font-size:12px;color:var(--text-sub);font-weight:600"></span>
+    </div>
+    <div id="transactionArea">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div class="skeleton" style="height:48px"></div>
+        <div class="skeleton" style="height:48px"></div>
+        <div class="skeleton" style="height:48px"></div>
+      </div>
+    </div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn-more" id="loadMoreBtn" onclick="loadTransactions()">더 보기</button>
+    </div>
+  </section>
+</main>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  if (!Auth.requireAuth()) {}
+
+  let nextTransactionPage = 0;
+  let transactions = [];
+
+  function esc(value) {
+    return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '-';
+    return iso.slice(0, 16).replace('T', ' ');
+  }
+
+  async function loadSummary() {
+    const [memberResult, pointResult] = await Promise.allSettled([
+      api.get('/api/members/me'),
+      api.get('/api/points'),
+    ]);
+
+    if (memberResult.status === 'fulfilled') {
+      const member = memberResult.value;
+      const initial = member.name ? member.name.slice(0, 1) : '?';
+      document.getElementById('memberArea').innerHTML = `
+        <div class="profile">
+          <div class="profile-avatar">${esc(initial)}</div>
+          <div class="profile-info">
+            <div class="profile-name">${esc(member.name)}</div>
+            <div class="profile-row"><span class="profile-key">이메일</span><span class="profile-value">${esc(member.email)}</span></div>
+            <div class="profile-row"><span class="profile-key">전화번호</span><span class="profile-value">${esc(member.phoneNumber)}</span></div>
+          </div>
+        </div>`;
+    } else {
+      document.getElementById('memberArea').innerHTML = `<div class="error-box">${esc(memberResult.reason?.message || '회원 정보를 불러오지 못했습니다.')}</div>`;
+    }
+
+    if (pointResult.status === 'fulfilled') {
+      const point = pointResult.value;
+      document.getElementById('balanceArea').innerHTML = `
+        <div class="balance-label">현재 사용 가능한 포인트</div>
+        <div class="balance-value">${Number(point.balance || 0).toLocaleString()}<span class="balance-unit">P</span></div>`;
+    } else {
+      document.getElementById('balanceArea').innerHTML = `<div class="error-box" style="color:#fff">${esc(pointResult.reason?.message || '포인트를 불러오지 못했습니다.')}</div>`;
+    }
+  }
+
+  async function loadTransactions() {
+    const button = document.getElementById('loadMoreBtn');
+    button.disabled = true;
+    button.textContent = '불러오는 중…';
+
+    try {
+      const page = await api.get(`/api/points/transactions?page=${nextTransactionPage}&size=20`);
+      transactions = transactions.concat(page.content || []);
+      nextTransactionPage += 1;
+      renderTransactions();
+
+      const hasNext = page.page < page.totalPages;
+      document.getElementById('loadMoreWrap').style.display = hasNext ? 'block' : 'none';
+      document.getElementById('transactionCount').textContent = `총 ${page.totalElements.toLocaleString()}건`;
+    } catch (e) {
+      if (transactions.length === 0) {
+        document.getElementById('transactionArea').innerHTML = `<div class="error-box">${esc(e.message || '포인트 내역을 불러오지 못했습니다.')}</div>`;
+      }
+    } finally {
+      button.disabled = false;
+      button.textContent = '더 보기';
+    }
+  }
+
+  function renderTransactions() {
+    const area = document.getElementById('transactionArea');
+    if (transactions.length === 0) {
+      area.innerHTML = `
+        <div class="empty">
+          <div class="empty-title">포인트 이용 내역이 없습니다</div>
+          <div class="empty-desc">결제하거나 포인트를 사용하면 이곳에 표시됩니다.</div>
+        </div>`;
+      return;
+    }
+
+    area.innerHTML = `<div class="transaction-list">${transactions.map(item => {
+      const amount = Number(item.amount || 0);
+      const isPlus = amount > 0;
+      const paymentText = item.paymentId ? `결제 #${item.paymentId}` : '일반 포인트';
+      return `
+        <div class="transaction-item">
+          <div class="transaction-main">
+            <div class="transaction-top">
+              <span class="type-badge ${isPlus ? 'type-plus' : 'type-minus'}">${esc(item.typeLabel)}</span>
+              <span class="transaction-payment">${esc(paymentText)}</span>
+            </div>
+            <span class="transaction-date">${fmtDate(item.createdAt)}</span>
+          </div>
+          <span class="transaction-amount ${isPlus ? 'amount-plus' : 'amount-minus'}">${amount > 0 ? '+' : ''}${amount.toLocaleString()}P</span>
+        </div>`;
+    }).join('')}</div>`;
+  }
+
+  loadSummary();
+  loadTransactions();
+</script>
+</body>
+</html>

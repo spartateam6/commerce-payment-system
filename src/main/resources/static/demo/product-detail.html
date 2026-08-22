@@ -432,6 +432,26 @@
     #toast.success { background: #1a7a4a; }
     #toast.error   { background: #c0392b; }
 
+    /* ── 바로 주문 포인트 모달 ── */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 1000; background: rgba(17,17,28,.58); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(420px, 100%); background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.28); overflow: hidden; }
+    .modal-head { padding: 18px 20px; border-bottom: 1px solid var(--border); font-size: 16px; font-weight: 900; }
+    .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .modal-row { display: flex; align-items: center; justify-content: space-between; color: var(--text-sub); font-size: 13px; }
+    .modal-row strong { color: var(--text); }
+    .modal-point-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .modal-point-input { min-width: 0; height: 42px; border: 1.5px solid var(--border); border-radius: 9px; padding: 0 12px; text-align: right; font-size: 14px; font-weight: 700; font-family: inherit; outline: none; }
+    .modal-point-input:focus { border-color: var(--primary); }
+    .modal-use-all { border: 1px solid #ffd2c2; border-radius: 9px; padding: 0 12px; background: #fff5f1; color: var(--primary); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    .modal-total { padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; font-weight: 700; }
+    .modal-total strong { color: var(--primary); font-size: 21px; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 9px; }
+    .modal-btn { height: 44px; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer; }
+    .modal-btn-cancel { background: #f1f1f1; color: var(--text-sub); }
+    .modal-btn-submit { background: var(--primary); color: #fff; }
+    .modal-btn-submit:disabled { background: #ddd; color: #aaa; cursor: wait; }
+
     /* ── 반응형 ── */
     @media (max-width: 720px) {
       header { padding: 0 16px; }
@@ -451,6 +471,7 @@
     <a href="/demo/cart.html" class="nav-link">장바구니</a>
     <span class="nav-sep">|</span>
     <a href="/demo/order-list.html" class="nav-link">주문 내역</a>
+    <a href="/demo/my-page.html" class="nav-link">내 정보</a>
     <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
     <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
   </div>
@@ -472,6 +493,28 @@
 
 </div>
 
+<div class="modal-backdrop" id="pointModal" onclick="if (event.target === this) closePointModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pointModalTitle">
+    <div class="modal-head" id="pointModalTitle">바로 주문</div>
+    <div class="modal-body">
+      <div class="modal-row"><span>상품 금액</span><strong id="directOrderTotal">0원</strong></div>
+      <div class="modal-row"><span>보유 포인트</span><strong><span id="directPointBalance">0</span>P</strong></div>
+      <div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:7px">사용할 포인트</div>
+        <div class="modal-point-row">
+          <input class="modal-point-input" id="directPointInput" type="number" min="0" step="1" value="0" inputmode="numeric" oninput="updateDirectPoint(this.value)" />
+          <button class="modal-use-all" onclick="useAllDirectPoints()">전액 사용</button>
+        </div>
+      </div>
+      <div class="modal-row modal-total"><span>최종 결제 금액</span><strong id="directPgAmount">0원</strong></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closePointModal()">취소</button>
+        <button class="modal-btn modal-btn-submit" id="directOrderBtn" onclick="submitDirectOrder()">주문 생성</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="/demo/js/api.js"></script>
@@ -479,6 +522,8 @@
 <script>
   const productId = new URLSearchParams(location.search).get('id');
   let unitPrice = 0;
+  let pendingDirectOrder = null;
+  let directPointBalance = 0;
 
   /* ── 헤더 ── */
   function initHeader() {
@@ -671,21 +716,85 @@
       location.href = '/demo/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
       return;
     }
-    const qty  = parseInt(document.getElementById('qtyInput')?.value || 1, 10);
-    const btn  = document.getElementById('buyNowBtn');
+    const qty = parseInt(document.getElementById('qtyInput')?.value || 1, 10);
+    const btn = document.getElementById('buyNowBtn');
     btn.disabled = true;
-    btn.textContent = '주문 준비 중…';
+    btn.textContent = '포인트 확인 중…';
 
     try {
-      const cartItem = await api.post('/api/cart/items', { productId, quantity: qty });
-      const order    = await api.post('/api/orders', { cartItemIds: [cartItem.cartItemId], pointToUse: 0 });
-      location.href  = `/demo/order-confirm.html?orderId=${order.orderId}&portonePaymentId=${encodeURIComponent(order.portonePaymentId || '')}&pgAmount=${order.pgAmount}`;
+      const point = await api.get('/api/points');
+      directPointBalance = Number(point.balance || 0);
     } catch (e) {
-      showToast(e.message || '주문 처리 실패', 'error');
+      directPointBalance = 0;
+      showToast('포인트를 불러오지 못해 0P로 주문합니다.', 'error');
+    }
+
+    pendingDirectOrder = { productId, name, qty, totalAmount: unitPrice * qty };
+    document.getElementById('directOrderTotal').textContent = `${pendingDirectOrder.totalAmount.toLocaleString()}원`;
+    document.getElementById('directPointBalance').textContent = directPointBalance.toLocaleString();
+    document.getElementById('directPointInput').value = 0;
+    updateDirectPoint(0);
+    document.getElementById('pointModal').classList.add('open');
+  }
+
+  function getMaximumDirectPoint() {
+    return pendingDirectOrder
+      ? Math.min(directPointBalance, pendingDirectOrder.totalAmount)
+      : 0;
+  }
+
+  function updateDirectPoint(value) {
+    if (!pendingDirectOrder) return;
+    const input = document.getElementById('directPointInput');
+    const pointToUse = Math.min(Math.max(Math.floor(Number(value) || 0), 0), getMaximumDirectPoint());
+    input.value = pointToUse;
+    input.max = getMaximumDirectPoint();
+    document.getElementById('directPgAmount').textContent = `${(pendingDirectOrder.totalAmount - pointToUse).toLocaleString()}원`;
+  }
+
+  function useAllDirectPoints() {
+    updateDirectPoint(getMaximumDirectPoint());
+  }
+
+  function closePointModal() {
+    if (document.getElementById('directOrderBtn').disabled) return;
+    document.getElementById('pointModal').classList.remove('open');
+    pendingDirectOrder = null;
+    const btn = document.getElementById('buyNowBtn');
+    if (btn) {
       btn.disabled = false;
       btn.textContent = '바로 주문';
     }
   }
+
+  async function submitDirectOrder() {
+    if (!pendingDirectOrder) return;
+
+    const submitButton = document.getElementById('directOrderBtn');
+    submitButton.disabled = true;
+    submitButton.textContent = '주문 처리 중…';
+
+    try {
+      const pointToUse = Math.min(
+        Math.max(Math.floor(Number(document.getElementById('directPointInput').value) || 0), 0),
+        getMaximumDirectPoint()
+      );
+      const { productId, qty } = pendingDirectOrder;
+      const cartItem = await api.post('/api/cart/items', { productId, quantity: qty });
+      const order = await api.post('/api/orders', { cartItemIds: [cartItem.cartItemId], pointToUse });
+      location.href = `/demo/order-confirm.html?orderId=${order.orderId}&portonePaymentId=${encodeURIComponent(order.portonePaymentId || '')}&pgAmount=${order.pgAmount}`;
+    } catch (e) {
+      showToast(e.message || '주문 처리 실패', 'error');
+      submitButton.disabled = false;
+      submitButton.textContent = '주문 생성';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('pointModal').classList.contains('open')) {
+      closePointModal();
+    }
+  });
 
   /* ── 장바구니 담기 ── */
   async function addToCart(productId, name) {

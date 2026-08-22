@@ -130,6 +130,7 @@
     <a href="/demo/products.html" class="nav-link">상품 목록</a>
     <span class="nav-sep">|</span>
     <a href="/demo/cart.html" class="nav-link">장바구니</a>
+    <a href="/demo/my-page.html" class="nav-link">내 정보</a>
     <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
     <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
   </div>
@@ -234,7 +235,7 @@
         <button class="btn-detail btn-detail-danger" onclick="cancelOrder(${order.orderId})">주문 취소</button>
       ` : isConfirmed(order) ? `
         <a href="/demo/order-confirm.html?orderId=${order.orderId}" class="btn-detail btn-detail-ghost">상세 보기</a>
-        <button class="btn-detail btn-detail-danger" onclick="cancelOrder(${order.orderId})">환불 취소</button>
+        <a href="/demo/order-confirm.html?orderId=${order.orderId}&refund=true" class="btn-detail btn-detail-danger">환불 요청</a>
       ` : `
         <a href="/demo/order-confirm.html?orderId=${order.orderId}" class="btn-detail btn-detail-ghost">상세 보기</a>
       `;
@@ -268,10 +269,7 @@
 
   /* ── 주문 취소 ── */
   async function cancelOrder(orderId) {
-    const msg = document.querySelector(`#order-card-${orderId} .status-confirmed`)
-      ? '결제된 주문을 취소하면 환불 처리됩니다. 계속하시겠습니까?'
-      : '주문을 취소하시겠습니까?';
-    if (!confirm(msg)) return;
+    if (!confirm('주문을 취소하시겠습니까?')) return;
 
     try {
       await api.post(`/api/orders/${orderId}/cancel`, {});
