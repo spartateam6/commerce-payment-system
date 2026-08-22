@@ -12,6 +12,7 @@ import io.github.spartateam6.commercepaymentsystem.global.response.PageResponse;
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -64,12 +66,15 @@ public class PointService {
         if (member.getPointBalance() < used) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_POINT);
         }
-        int earned = pgAmount == null ? 0 : pgAmount * EARN_RATE_PERCENT/100;
+        int earned = pgAmount == null ? 0 : pgAmount * EARN_RATE_PERCENT / 100;
 
         saveTransaction(member, payment, PointTransactionType.USE, used);
         saveTransaction(member, payment, PointTransactionType.EARN, earned);
 
         member.changePoint(earned - used);
+        log.info("결제 포인트 정산 완료 paymentId={} memberId={} used={} earned={} balanceAfter={}",
+                payment.getId(), memberId, used, earned, member.getPointBalance());
+
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -88,6 +93,8 @@ public class PointService {
         saveTransaction(member, payment, PointTransactionType.EARN_REVOKE, revokeAmount);
 
         member.changePoint(restoreAmount - revokeAmount);
+        log.info("환불 포인트 정산 반영 paymentId={} memberId={} restored={} revoked={} balanceAfter={}",
+                payment.getId(), memberId, restoreAmount, revokeAmount, member.getPointBalance());
     }
 
 
