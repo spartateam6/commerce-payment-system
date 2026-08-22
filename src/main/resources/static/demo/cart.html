@@ -46,14 +46,28 @@
     /* ── 아이템 목록 ── */
     .items-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
     .items-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
-    .items-header-title { font-size: 14px; font-weight: 700; }
+    .items-header-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .selection-count { color: var(--text-sub); font-size: 12px; font-weight: 600; }
     .btn-clear { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; font-size: 12px; color: var(--text-sub); cursor: pointer; font-family: inherit; transition: all .15s; }
     .btn-clear:hover { border-color: #c0392b; color: #c0392b; }
 
     /* ── 카트 아이템 ── */
-    .cart-item { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: background .15s; }
+    .cart-item { display: grid; grid-template-columns: 18px 72px 1fr auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: background .15s; }
     .cart-item:last-child { border-bottom: none; }
     .cart-item:hover { background: #fafafa; }
+    .cart-checkbox {
+      width: 18px; height: 18px; margin: 0; border: 1.5px solid #888; border-radius: 3px;
+      background-color: #fff; background-position: center; background-repeat: no-repeat;
+      -webkit-appearance: none; appearance: none; cursor: pointer; flex-shrink: 0;
+    }
+    .cart-checkbox:checked {
+      border-color: var(--primary); background-color: var(--primary); background-size: 12px 12px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.2l3.2 3.2L13 4.6' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    .cart-checkbox:indeterminate {
+      border-color: var(--primary); background-color: var(--primary); background-image: linear-gradient(#fff, #fff); background-size: 10px 2px;
+    }
+    .cart-checkbox:focus-visible { outline: 2px solid rgba(255,107,53,.3); outline-offset: 2px; }
 
     .item-img {
       width: 72px; height: 72px; background: linear-gradient(135deg, #f0f0f0, #e8e8e8);
@@ -75,7 +89,9 @@
     .qty-btn { width: 32px; height: 32px; border: none; background: #f8f8f8; color: var(--text); font-size: 16px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
     .qty-btn:hover:not(:disabled) { background: #eee; }
     .qty-btn:disabled { color: #ccc; cursor: not-allowed; }
-    .qty-val { width: 40px; text-align: center; font-size: 14px; font-weight: 700; border: none; border-left: 1.5px solid var(--border); border-right: 1.5px solid var(--border); padding: 0; height: 32px; outline: none; background: #fff; font-family: inherit; }
+    .qty-val { width: 40px; text-align: center; font-size: 14px; font-weight: 700; border: none; border-left: 1.5px solid var(--border); border-right: 1.5px solid var(--border); padding: 0; height: 32px; outline: none; background: #fff; font-family: inherit; -moz-appearance: textfield; appearance: textfield; }
+    .qty-val::-webkit-inner-spin-button,
+    .qty-val::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
     .btn-delete { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; transition: color .15s; }
     .btn-delete:hover { color: #c0392b; }
@@ -92,6 +108,7 @@
     .summary-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 76px; }
     .summary-title { font-size: 15px; font-weight: 800; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
     .summary-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-sub); }
+    .summary-value { color: #555; font-weight: 700; }
     .point-box { padding: 14px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 9px; }
     .point-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-sub); }
     .point-balance { color: var(--primary); font-weight: 800; }
@@ -153,7 +170,7 @@
 
     <div class="summary-wrap">
       <div class="summary-title">주문 요약</div>
-      <div class="summary-row"><span>상품 금액</span><span id="sumPrice">-</span></div>
+      <div class="summary-row"><span>상품 금액</span><span class="summary-value" id="sumPrice">-</span></div>
       <div class="point-box">
         <div class="point-head">
           <span>포인트 사용</span>
@@ -165,7 +182,7 @@
         </div>
         <div class="point-hint" id="pointHint">포인트를 불러오는 중입니다.</div>
       </div>
-      <div class="summary-row"><span>포인트 할인</span><span id="pointUsed">-0P</span></div>
+      <div class="summary-row"><span>포인트 할인</span><span class="summary-value" id="pointUsed">-0P</span></div>
       <div class="summary-total">
         <span class="summary-total-label">최종 결제 금액</span>
         <span class="summary-total-price"><span id="totalPrice">0</span><span class="won">원</span></span>
@@ -184,6 +201,7 @@
 
   let cartData = null;
   let pointBalance = null;
+  let selectedCartItemIds = new Set();
 
   async function loadPointBalance() {
     try {
@@ -215,6 +233,7 @@
 
     try {
       cartData = await api.get('/api/cart/items');
+      selectedCartItemIds = new Set(cartData.items.map(item => item.cartItemId));
       renderCart();
     } catch (e) {
       wrap.innerHTML = `<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-title">오류가 발생했습니다</div><div class="empty-desc">${esc(e.message)}</div></div>`;
@@ -225,11 +244,9 @@
   function renderCart() {
     const wrap   = document.getElementById('itemsWrap');
     const items  = cartData?.items || [];
-    const total  = cartData?.totalPrice || 0;
+    const selectedItems = getSelectedItems();
 
     document.getElementById('itemCount').textContent = items.length ? `(${items.length})` : '';
-    document.getElementById('sumPrice').textContent  = total.toLocaleString() + '원';
-    document.getElementById('orderBtn').disabled = items.length === 0;
     renderOrderSummary();
 
     if (items.length === 0) {
@@ -245,11 +262,22 @@
 
     wrap.innerHTML = `
       <div class="items-header">
-        <span class="items-header-title">상품 ${items.length}개</span>
+        <label class="items-header-title">
+          <input class="cart-checkbox" id="selectAllCheckbox" type="checkbox" onchange="toggleAllItems(this.checked)" />
+          전체 선택
+          <span class="selection-count">(${selectedItems.length}/${items.length})</span>
+        </label>
         <button class="btn-clear" onclick="clearCart()">전체 삭제</button>
       </div>
       ${items.map(it => `
         <div class="cart-item" id="item-${it.cartItemId}">
+          <input
+            class="cart-checkbox"
+            type="checkbox"
+            aria-label="${esc(it.productName)} 선택"
+            onchange="toggleItemSelection(${it.cartItemId}, this.checked)"
+            ${selectedCartItemIds.has(it.cartItemId) ? 'checked' : ''}
+          />
           <div class="item-img">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
               <path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/>
@@ -258,7 +286,7 @@
           </div>
           <div class="item-info">
             <div class="item-name"><a href="/demo/product-detail.html?id=${it.productId}">${esc(it.productName)}</a></div>
-            <div class="item-unit-price">${it.price.toLocaleString()}원 / 개</div>
+            <div class="item-unit-price">${it.price.toLocaleString()}원</div>
           </div>
           <div class="item-right">
             <div class="item-line-price">${it.totalPrice.toLocaleString()}원</div>
@@ -272,10 +300,34 @@
           </div>
         </div>
       `).join('')}`;
+
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    selectAllCheckbox.checked = selectedItems.length === items.length;
+    selectAllCheckbox.indeterminate = selectedItems.length > 0 && selectedItems.length < items.length;
+  }
+
+  function getSelectedItems() {
+    return (cartData?.items || []).filter(item => selectedCartItemIds.has(item.cartItemId));
+  }
+
+  function toggleAllItems(checked) {
+    selectedCartItemIds = checked
+      ? new Set((cartData?.items || []).map(item => item.cartItemId))
+      : new Set();
+    renderCart();
+  }
+
+  function toggleItemSelection(cartItemId, checked) {
+    if (checked) {
+      selectedCartItemIds.add(cartItemId);
+    } else {
+      selectedCartItemIds.delete(cartItemId);
+    }
+    renderCart();
   }
 
   function getMaximumPoint() {
-    const total = cartData?.totalPrice || 0;
+    const total = getSelectedItems().reduce((sum, item) => sum + item.totalPrice, 0);
     return Math.min(pointBalance || 0, total);
   }
 
@@ -297,7 +349,8 @@
   }
 
   function renderOrderSummary() {
-    const total = cartData?.totalPrice || 0;
+    const selectedItems = getSelectedItems();
+    const total = selectedItems.reduce((sum, item) => sum + item.totalPrice, 0);
     const input = document.getElementById('pointInput');
     const useAllButton = document.getElementById('useAllPointBtn');
     const maximumPoint = getMaximumPoint();
@@ -308,14 +361,21 @@
     input.disabled = pointBalance === null || maximumPoint === 0;
     useAllButton.disabled = pointBalance === null || maximumPoint === 0;
 
+    document.getElementById('sumPrice').textContent = `${total.toLocaleString()}원`;
     document.getElementById('pointBalance').textContent = pointBalance === null ? '-' : pointBalance.toLocaleString();
     document.getElementById('pointUsed').textContent = `-${pointToUse.toLocaleString()}P`;
     document.getElementById('totalPrice').textContent = (total - pointToUse).toLocaleString();
+    document.getElementById('orderBtn').disabled = selectedItems.length === 0;
 
     if (pointBalance !== null) {
-      document.getElementById('pointHint').textContent = maximumPoint > 0
-        ? `최대 ${maximumPoint.toLocaleString()}P까지 사용할 수 있습니다.`
-        : '사용 가능한 포인트가 없습니다.';
+      const hint = document.getElementById('pointHint');
+      if (selectedItems.length === 0) {
+        hint.textContent = '주문할 상품을 선택해주세요.';
+      } else if (maximumPoint > 0) {
+        hint.textContent = `최대 ${maximumPoint.toLocaleString()}P까지 사용할 수 있습니다.`;
+      } else {
+        hint.textContent = '사용 가능한 포인트가 없습니다.';
+      }
     }
   }
 
@@ -342,6 +402,7 @@
     try {
       await api.delete(`/api/cart/items/${cartItemId}`);
       cartData.items = cartData.items.filter(i => i.cartItemId !== cartItemId);
+      selectedCartItemIds.delete(cartItemId);
       cartData.totalPrice = cartData.items.reduce((s, i) => s + i.totalPrice, 0);
       renderCart();
       showToast('삭제했습니다', 'success');
@@ -357,6 +418,7 @@
       await api.delete('/api/cart/items');
       cartData.items = [];
       cartData.totalPrice = 0;
+      selectedCartItemIds.clear();
       renderCart();
     } catch (e) {
       showToast(e.message || '삭제 실패', 'error');
@@ -365,7 +427,7 @@
 
   /* ── 주문 생성 ── */
   async function createOrder() {
-    const items = cartData?.items || [];
+    const items = getSelectedItems();
     if (items.length === 0) return;
 
     const btn = document.getElementById('orderBtn');
