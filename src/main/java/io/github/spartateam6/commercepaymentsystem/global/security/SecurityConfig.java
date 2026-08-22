@@ -34,12 +34,19 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/actuator/health",
-                                "/api/products/**",
-                                "/api/auth/**",
+                                // Portone 결제
+                                "/demo/**",
+
+                                // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**")
+                                "/v3/api-docs/**",
+
+                                "/actuator/health",
+
+                                "/api/products/**",
+                                "/api/auth/**"
+                        )
                         .permitAll()
                         .anyRequest().authenticated()
                 )

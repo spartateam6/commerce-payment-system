@@ -73,7 +73,7 @@ public class Payment extends AuditingEntity {
     }
 
     private String generatePortonePaymentId() {
-        return "payment_" + UUID.randomUUID();
+        return "pay_" + UUID.randomUUID();
     }
 
     public void changeStatus(PaymentStatus newStatus) {
