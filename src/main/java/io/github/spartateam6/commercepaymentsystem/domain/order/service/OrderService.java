@@ -34,6 +34,7 @@ public class OrderService {
         Order order = Order.create(member, orderNumber, pointUsedAmount);
 
         orderItems.forEach(item -> order.addOrderItem(
+                item.cartItemId(),
                 item.product(),
                 item.productName(),
                 item.unitPrice(),
@@ -77,6 +78,7 @@ public class OrderService {
     }
 
     public record CreateOrderItem(
+            Long cartItemId,
             Product product,
             String productName,
             Integer unitPrice,

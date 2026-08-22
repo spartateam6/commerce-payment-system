@@ -46,6 +46,13 @@ public class OrderItem extends AuditingEntity {
     @Column(name = "product_id", insertable = false, updatable = false)
     private Long productId;
 
+    /**
+     * 주문 생성 당시 선택한 장바구니 항목 ID 스냅샷.
+     * 장바구니 항목은 결제 완료 후 삭제되므로 FK 연관관계로 매핑하지 않는다.
+     */
+    @Column(name = "cart_item_id")
+    private Long cartItemId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "product_id",
@@ -65,6 +72,7 @@ public class OrderItem extends AuditingEntity {
 
     static OrderItem create(
             Order order,
+            Long cartItemId,
             Product product,
             String productName,
             Integer unitPrice,
@@ -72,6 +80,9 @@ public class OrderItem extends AuditingEntity {
     ) {
         if (order == null) {
             throw new IllegalArgumentException("주문은 필수입니다.");
+        }
+        if (cartItemId == null || cartItemId <= 0) {
+            throw new IllegalArgumentException("장바구니 상품 ID는 필수입니다.");
         }
         if (product == null) {
             throw new IllegalArgumentException("상품은 필수입니다.");
@@ -88,6 +99,7 @@ public class OrderItem extends AuditingEntity {
 
         OrderItem orderItem = new OrderItem();
         orderItem.order = order;
+        orderItem.cartItemId = cartItemId;
         orderItem.product = product;
         orderItem.productNameSnapshot = productName;
         orderItem.unitPriceSnapshot = unitPrice;

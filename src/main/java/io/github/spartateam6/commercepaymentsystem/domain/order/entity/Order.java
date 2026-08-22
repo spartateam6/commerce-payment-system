@@ -99,6 +99,7 @@ public class Order extends AuditingEntity {
     }
 
     public void addOrderItem(
+            Long cartItemId,
             Product product,
             String productName,
             Integer unitPrice,
@@ -106,6 +107,7 @@ public class Order extends AuditingEntity {
     ) {
         OrderItem orderItem = OrderItem.create(
                 this,
+                cartItemId,
                 product,
                 productName,
                 unitPrice,

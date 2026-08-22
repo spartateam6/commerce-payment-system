@@ -137,6 +137,7 @@ public class OrderFacade {
         List<OrderService.CreateOrderItem> createItems = preparedOrder.items()
                 .stream()
                 .map(item -> new OrderService.CreateOrderItem(
+                        item.cartItemId(),
                         item.product(),
                         item.productName(),
                         item.unitPrice(),

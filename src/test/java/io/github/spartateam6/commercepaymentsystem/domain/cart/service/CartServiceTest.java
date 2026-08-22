@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -225,5 +226,41 @@ class CartServiceTest {
         cartService.clearCart(1L);
 
         verify(cartItemRepository, never()).deleteAllByCart_Id(any());
+    }
+
+    @Test
+    void deletePurchasedItems_주문에_저장된_장바구니_항목만_삭제한다() {
+        Cart cart = mock(Cart.class);
+        List<Long> purchasedCartItemIds = List.of(10L, 20L);
+
+        given(cartRepository.findByMember_Id(1L))
+                .willReturn(Optional.of(cart));
+        given(cart.getId()).willReturn(100L);
+
+        cartService.deletePurchasedItems(1L, purchasedCartItemIds);
+
+        verify(cartItemRepository)
+                .deleteAllByCartIdAndIdIn(100L, purchasedCartItemIds);
+        verify(cartItemRepository, never()).deleteAllByCart_Id(any());
+    }
+
+    @Test
+    void deletePurchasedItems_삭제할_항목이_없으면_조회하지_않는다() {
+        cartService.deletePurchasedItems(1L, List.of());
+
+        verify(cartRepository, never()).findByMember_Id(any());
+        verify(cartItemRepository, never())
+                .deleteAllByCartIdAndIdIn(any(), any());
+    }
+
+    @Test
+    void deletePurchasedItems_장바구니가_없어도_정상_처리한다() {
+        given(cartRepository.findByMember_Id(1L))
+                .willReturn(Optional.empty());
+
+        cartService.deletePurchasedItems(1L, List.of(10L));
+
+        verify(cartItemRepository, never())
+                .deleteAllByCartIdAndIdIn(any(), any());
     }
 }
