@@ -8,6 +8,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.payment.port.PaymentGa
 import io.github.spartateam6.commercepaymentsystem.domain.payment.port.PaymentGatewayResponse;
 import io.github.spartateam6.commercepaymentsystem.domain.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
  * 외부 API 호출을 트랜잭션 안에서 하면 커넥션을 오래 점유하고, 롤백해도 PG 상태는 되돌릴 수 없기 때문..
  * DB 변경은 전부 @Transactional 이 걸린 PaymentService 로 위임한다
  */
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PaymentFacade {
@@ -34,8 +37,10 @@ public class PaymentFacade {
         }
 
         // 포인트로 전액 결제하면 PG를 안거치도록한다.
-        if (paymentDto.pgAmount() == 0){
+        if (paymentDto.pgAmount() == 0) {
             paymentService.successPayment(memberId, paymentRequestDto.orderNumber(), 0L);
+            log.info("포인트 전액 결제 완료 paymentId={} orderNumber={} memberId={} pgAmount=0",
+                    paymentDto.id(), paymentRequestDto.orderNumber(), memberId);
 
             return PaymentConfirmResponseDto.success(paymentDto);
         }
@@ -49,17 +54,32 @@ public class PaymentFacade {
         if (!isPaid) {
             // PG 미승인 — 실제 카드 승인이 없으므로 보상 취소 없이 바로 실패 처리
             paymentService.failPayment(paymentRequestDto.orderNumber());
+            log.warn("PG결제 승인 실패 paymentId={} orderNumber={} memberId={} gatewayStatus={}",
+                    paymentDto.id(), paymentRequestDto.orderNumber(), memberId, pgPayment.status());
+
             return PaymentConfirmResponseDto.fail();
         }
 
         if (!priceOk) {
             // PG 승인됐지만 금액 불일치 — 보상 취소 후 실패 처리
-            paymentGateway.cancelPayment(paymentDto.portonePaymentId(), "결제 금액 불일치");
+            try {
+                paymentGateway.cancelPayment(paymentDto.portonePaymentId(), "결제 금액 불일치");
+            } catch (RuntimeException exception) {
+                log.warn("결제 금액 불일치 보상 취소 실패 paymentId={} orderNumber={} expectedPgAmount={} actualPgAmount={}",
+                        paymentDto.id(), paymentRequestDto.orderNumber(), paymentDto.pgAmount(), pgPayment.totalAmount(),exception);
+                throw exception;
+            }
             paymentService.failPayment(paymentRequestDto.orderNumber());
+            log.info("결제 금액 불일치 PG 결제 취소 paymentId={} orderNumber={} expectedPgAmount={} actualPgAmount={} cancelCompleted=true",
+                    paymentDto.id(), paymentRequestDto.orderNumber(), paymentDto.pgAmount(), pgPayment.totalAmount());
+
             return PaymentConfirmResponseDto.fail();
         }
 
         paymentService.successPayment(memberId, paymentRequestDto.orderNumber(), pgPayment.totalAmount());
+        log.info("정상 결제 완료 paymentId={} orderNumber={} memberId={} pgAmount={}",
+                paymentDto.id(), paymentRequestDto.orderNumber(), memberId, pgPayment.totalAmount());
+
         return PaymentConfirmResponseDto.success(paymentDto);
     }
 
