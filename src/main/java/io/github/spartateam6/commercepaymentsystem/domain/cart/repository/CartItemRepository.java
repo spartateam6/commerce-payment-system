@@ -4,6 +4,9 @@ import io.github.spartateam6.commercepaymentsystem.domain.cart.entity.CartItem;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,4 +29,15 @@ public interface CartItemRepository
     );
 
     void deleteAllByCart_Id(Long cartId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            DELETE FROM CartItem ci
+            WHERE ci.cart.id = :cartId
+              AND ci.id IN :cartItemIds
+            """)
+    int deleteAllByCartIdAndIdIn(
+            @Param("cartId") Long cartId,
+            @Param("cartItemIds") List<Long> cartItemIds
+    );
 }

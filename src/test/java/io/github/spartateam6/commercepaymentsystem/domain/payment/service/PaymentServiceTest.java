@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -217,14 +218,15 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 성공 시 Payment는 PAID, Order는 CONFIRMED 상태가 되고 장바구니가 비워진다")
+        @DisplayName("결제 성공 시 상태를 완료하고 주문 당시 선택한 장바구니 항목만 삭제한다")
         void successPayment_성공() {
             // given
             Payment payment = PaymentFixture.createPayment(); // PENDING
             Order order = payment.getOrder(); // PAYMENT_PENDING
+            List<Long> purchasedCartItemIds = List.of(10L, 20L);
 
             given(paymentRepository.findByOrderNumberWithOrderLock(ORDER_NUMBER)).willReturn(Optional.of(payment));
-            willDoNothing().given(cartService).clearCart(memberId);
+            given(orderItemService.getCartItemIds(order.getId())).willReturn(purchasedCartItemIds);
 
             // when
             paymentService.successPayment(memberId, ORDER_NUMBER, 30000L);
@@ -233,7 +235,8 @@ class PaymentServiceTest {
             assertEquals(PaymentStatus.PAID, payment.getStatus());
             assertNotNull(payment.getCompletedAt());
             assertEquals(OrderStatus.CONFIRMED, order.getStatus());
-            then(cartService).should().clearCart(memberId);
+            then(cartService).should().deletePurchasedItems(memberId, purchasedCartItemIds);
+            then(cartService).should(never()).clearCart(memberId);
             then(paymentRepository).should().save(payment);
         }
     }

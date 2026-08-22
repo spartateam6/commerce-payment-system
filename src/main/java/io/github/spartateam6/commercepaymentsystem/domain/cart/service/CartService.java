@@ -152,4 +152,17 @@ public class CartService {
 
         cartItemRepository.deleteAllByCart_Id(optionalCart.get().getId());
     }
+
+    @Transactional
+    public void deletePurchasedItems(Long memberId, List<Long> cartItemIds) {
+        if (cartItemIds == null || cartItemIds.isEmpty()) {
+            return;
+        }
+
+        cartRepository.findByMember_Id(memberId)
+                .ifPresent(cart -> cartItemRepository.deleteAllByCartIdAndIdIn(
+                        cart.getId(),
+                        cartItemIds
+                ));
+    }
 }
