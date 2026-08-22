@@ -22,6 +22,7 @@ import io.github.spartateam6.commercepaymentsystem.domain.product.service.Produc
 import io.github.spartateam6.commercepaymentsystem.global.constant.ErrorCode;
 import io.github.spartateam6.commercepaymentsystem.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
@@ -64,6 +66,8 @@ public class OrderFacade {
         order.updateStatus(OrderStatus.CANCELLED);
         paymentService.cancelPendingByOrder(order.getOrderNumber());
         orderItemService.restoreOrderProductStock(orderId);
+        log.info("주문취소와 재고 복구 완료 orderId={} orderNumber={} memberId={} orderStatus={} stockRestoreCompleted=true",
+                order.getId(), order.getOrderNumber(), memberId, order.getStatus());
     }
 
 
