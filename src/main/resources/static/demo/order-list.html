@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주문 내역 : SPARTA SHOP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:    #FF6B35;
+      --primary-dk: #e55a24;
+      --accent:     #1a1a2e;
+      --text:       #111;
+      --text-sub:   #888;
+      --border:     #ebebeb;
+      --bg:         #f5f5f7;
+      --card:       #fff;
+      --radius:     14px;
+      --shadow-sm:  0 2px 8px rgba(0,0,0,.06);
+      --shadow-md:  0 6px 20px rgba(0,0,0,.09);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+    /* ── 헤더 ── */
+    header { background: var(--accent); height: 60px; display: flex; align-items: center; padding: 0 32px; gap: 20px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .logo { font-size: 20px; font-weight: 900; color: #fff; text-decoration: none; letter-spacing: -0.5px; }
+    .logo span { color: var(--primary); }
+    .header-nav { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .nav-link { color: rgba(255,255,255,.7); text-decoration: none; font-size: 13px; font-weight: 600; transition: color .15s; }
+    .nav-link:hover { color: #fff; }
+    .nav-sep { color: rgba(255,255,255,.25); font-size: 12px; }
+    .nav-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all .18s; border: none; font-family: inherit; }
+    .nav-btn-ghost { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.18); }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .nav-btn-primary { background: var(--primary); color: #fff; }
+
+    /* ── 레이아웃 ── */
+    .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
+    .page-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 24px; }
+
+    /* ── 주문 카드 ── */
+    .order-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .order-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .order-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+    .order-card-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .order-num { font-size: 13px; font-weight: 800; font-family: monospace; color: var(--accent); }
+    .order-date { font-size: 12px; color: var(--text-sub); margin-left: auto; }
+
+    /* ── 상태 뱃지 ── */
+    .status-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .status-pending   { background: #fff8e6; color: #b07a00; }
+    .status-confirmed { background: #e8faf3; color: #1a7a4a; }
+    .status-cancelled { background: #f5f5f5; color: #999; }
+
+    .order-card-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── 아이템 미리보기 ── */
+    .item-previews { display: flex; flex-direction: column; gap: 10px; }
+    .item-row { display: flex; align-items: center; gap: 12px; }
+    .item-thumb { width: 48px; height: 48px; background: linear-gradient(135deg, #f0f0f0, #e8e8e8); border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .item-thumb svg { opacity: .4; }
+    .item-text { flex: 1; min-width: 0; }
+    .item-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-sub  { font-size: 12px; color: var(--text-sub); }
+    .item-amt  { font-size: 13px; font-weight: 700; flex-shrink: 0; }
+
+    .more-items { font-size: 12px; color: var(--text-sub); padding: 4px 0; }
+
+    /* ── 하단 행 ── */
+    .order-card-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
+    .total-label { font-size: 12px; color: var(--text-sub); }
+    .total-price { font-size: 18px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+
+    .foot-actions { display: flex; gap: 8px; }
+    .btn-detail { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; transition: all .15s; border: none; }
+    .btn-detail-primary { background: var(--primary); color: #fff; }
+    .btn-detail-primary:hover { background: var(--primary-dk); }
+    .btn-detail-ghost { background: #f0f0f0; color: var(--text-sub); }
+    .btn-detail-ghost:hover { background: #e4e4e4; color: var(--text); }
+    .btn-detail-danger { background: #fff0f0; color: #c0392b; border: 1px solid #ffc5c5; }
+    .btn-detail-danger:hover { background: #ffe0e0; }
+
+    /* ── 빈 상태 ── */
+    .empty { text-align: center; padding: 80px 20px; }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; display: block; }
+    .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .empty-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 24px; }
+    .btn-shop { display: inline-block; background: var(--primary); color: #fff; text-decoration: none; border-radius: 10px; padding: 12px 28px; font-size: 14px; font-weight: 700; }
+    .btn-shop:hover { background: var(--primary-dk); }
+
+    /* ── 스켈레톤 ── */
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── 토스트 ── */
+    #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--accent); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s; z-index: 9999; white-space: nowrap; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { background: #1a7a4a; }
+    #toast.error   { background: #c0392b; }
+
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      .page { padding: 20px 14px 60px; }
+      .order-card-foot { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/demo/products.html"><span>S</span>PARTA SHOP</a>
+  <div class="header-nav">
+    <a href="/demo/products.html" class="nav-link">상품 목록</a>
+    <span class="nav-sep">|</span>
+    <a href="/demo/cart.html" class="nav-link">장바구니</a>
+    <a href="/demo/login.html" id="loginLink" class="nav-btn nav-btn-primary" style="display:none">로그인</a>
+    <button id="logoutBtn" class="nav-btn nav-btn-ghost" style="display:none" onclick="Auth.logout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-title">주문 내역</div>
+  <div id="listArea"></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/demo/js/api.js"></script>
+<script src="/demo/js/auth.js"></script>
+<script>
+  if (!Auth.requireAuth()) {}
+
+  document.getElementById('loginLink').style.display = Auth.isLoggedIn() ? 'none'  : 'flex';
+  document.getElementById('logoutBtn').style.display = Auth.isLoggedIn() ? 'block' : 'none';
+
+  function fmtDate(iso) {
+    if (!iso) return '-';
+    return iso.slice(0, 16).replace('T', ' ');
+  }
+
+  function statusBadge(status) {
+    const map = { PAYMENT_PENDING: ['status-pending','결제 대기'], CONFIRMED: ['status-confirmed','결제 완료'], CANCELLED: ['status-cancelled','취소됨'] };
+    const [cls, label] = map[status] || ['status-cancelled', status];
+    return `<span class="status-badge ${cls}">${label}</span>`;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── 주문 목록 로드 (CONFIRMED / CANCELLED 만 표시) ── */
+  async function loadOrders() {
+    const area = document.getElementById('listArea');
+
+    // 스켈레톤
+    area.innerHTML = [1,2,3].map(() => `
+      <div class="order-card" style="margin-bottom:16px">
+        <div style="padding:16px 20px;background:#fafafa;border-bottom:1px solid var(--border);display:flex;gap:12px">
+          <div class="skeleton" style="height:14px;width:180px"></div>
+          <div class="skeleton" style="height:14px;width:60px;margin-left:auto"></div>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <div class="skeleton" style="height:48px;border-radius:8px"></div>
+          <div class="skeleton" style="height:20px;width:50%"></div>
+        </div>
+      </div>`).join('');
+
+    try {
+      const all    = await api.get('/api/orders');
+      const orders = all.filter(o => o.orderStatus !== 'PAYMENT_PENDING');
+      renderOrders(orders);
+    } catch (e) {
+      area.innerHTML = `<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-title">불러오기 실패</div><div class="empty-desc">${esc(e.message)}</div></div>`;
+    }
+  }
+
+  /* ── 주문 목록 렌더링 ── */
+  function renderOrders(orders) {
+    const area = document.getElementById('listArea');
+
+    if (!orders || orders.length === 0) {
+      area.innerHTML = `
+        <div class="empty">
+          <span class="empty-icon">📦</span>
+          <div class="empty-title">주문 내역이 없습니다</div>
+          <div class="empty-desc">첫 번째 주문을 해보세요!</div>
+          <a class="btn-shop" href="/demo/products.html">쇼핑하러 가기</a>
+        </div>`;
+      return;
+    }
+
+    const isPending   = o => o.orderStatus === 'PAYMENT_PENDING';
+    const isConfirmed = o => o.orderStatus === 'CONFIRMED';
+
+    const html = orders.map(order => {
+      const previewItems = order.orderItems.slice(0, 2);
+      const moreCount    = order.orderItems.length - previewItems.length;
+
+      const itemsHtml = previewItems.map(it => `
+        <div class="item-row">
+          <div class="item-thumb">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+              <path d="M20 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/>
+              <path d="M16 7V5a4 4 0 0 0-8 0v2"/>
+            </svg>
+          </div>
+          <div class="item-text">
+            <div class="item-name">${esc(it.productName)}</div>
+            <div class="item-sub">${it.unitPrice.toLocaleString()}원 × ${it.quantity}개</div>
+          </div>
+          <div class="item-amt">${it.lineAmount.toLocaleString()}원</div>
+        </div>
+      `).join('');
+
+      const actionBtns = isPending(order) ? `
+        <a href="/demo/order-confirm.html?orderId=${order.orderId}" class="btn-detail btn-detail-primary">결제하기</a>
+        <button class="btn-detail btn-detail-danger" onclick="cancelOrder(${order.orderId})">주문 취소</button>
+      ` : isConfirmed(order) ? `
+        <a href="/demo/order-confirm.html?orderId=${order.orderId}" class="btn-detail btn-detail-ghost">상세 보기</a>
+        <button class="btn-detail btn-detail-danger" onclick="cancelOrder(${order.orderId})">환불 취소</button>
+      ` : `
+        <a href="/demo/order-confirm.html?orderId=${order.orderId}" class="btn-detail btn-detail-ghost">상세 보기</a>
+      `;
+
+      return `
+        <div class="order-card" id="order-card-${order.orderId}">
+          <div class="order-card-head">
+            <span class="order-num">${esc(order.orderNumber)}</span>
+            ${statusBadge(order.orderStatus)}
+            <span class="order-date">${fmtDate(order.createdAt)}</span>
+          </div>
+          <div class="order-card-body">
+            <div class="item-previews">
+              ${itemsHtml}
+              ${moreCount > 0 ? `<div class="more-items">외 ${moreCount}개 상품</div>` : ''}
+            </div>
+            <div class="order-card-foot">
+              <div>
+                <div class="total-label">총 결제 금액</div>
+                <div class="total-price">${order.totalAmount.toLocaleString()}원</div>
+              </div>
+              <div class="foot-actions">${actionBtns}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    area.innerHTML = `<div class="order-list">${html}</div>`;
+  }
+
+  /* ── 주문 취소 ── */
+  async function cancelOrder(orderId) {
+    const msg = document.querySelector(`#order-card-${orderId} .status-confirmed`)
+      ? '결제된 주문을 취소하면 환불 처리됩니다. 계속하시겠습니까?'
+      : '주문을 취소하시겠습니까?';
+    if (!confirm(msg)) return;
+
+    try {
+      await api.post(`/api/orders/${orderId}/cancel`, {});
+      showToast('주문이 취소되었습니다', 'success');
+      loadOrders();
+    } catch (e) {
+      showToast(e.message || '취소 실패', 'error');
+    }
+  }
+
+  /* ── 토스트 ── */
+  let _t;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = `show ${type}`;
+    clearTimeout(_t); _t = setTimeout(() => el.className = '', 2600);
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>
